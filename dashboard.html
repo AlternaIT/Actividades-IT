@@ -178,6 +178,68 @@
     @media(max-width:500px) {
       .kpi-grid { grid-template-columns: 1fr; }
     }
+
+    /* ─── USER MANAGEMENT ─── */
+    .role-badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; white-space: nowrap;
+    }
+    .role-admin     { background: #fce7f3; color: #9d174d; }
+    .role-supervisor{ background: #ede9fe; color: #5b21b6; }
+    .role-tecnico   { background: #dbeafe; color: #1e40af; }
+    .role-consulta  { background: #f3f4f6; color: #374151; }
+
+    .status-pill-on  { background: #dcfce7; color: #166534; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .status-pill-off { background: #fee2e2; color: #991b1b; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+
+    .toggle-btn {
+      width: 38px; height: 22px; border-radius: 999px;
+      border: none; cursor: pointer; position: relative;
+      transition: background .2s; flex-shrink: 0; display: inline-block;
+    }
+    .toggle-btn.on  { background: #22c55e; }
+    .toggle-btn.off { background: #d1d5db; }
+    .toggle-btn::after {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; top: 3px; transition: left .2s;
+      box-shadow: 0 1px 3px #00000030;
+    }
+    .toggle-btn.on::after  { left: 19px; }
+    .toggle-btn.off::after { left: 3px; }
+
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; flex-shrink: 0; color: #fff;
+    }
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .user-name  { font-weight: 600; font-size: 13px; color: #172033; line-height: 1.3; }
+    .user-email { font-size: 11px; color: #9ca3af; }
+
+    .perm-matrix { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .perm-matrix th {
+      background: #f8fafc; padding: 10px 14px;
+      font-size: 11px; color: #687386; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .4px;
+      text-align: center;
+    }
+    .perm-matrix th:first-child { text-align: left; }
+    .perm-matrix td { padding: 10px 14px; border-bottom: 1px solid #f0f2f7; text-align: center; }
+    .perm-matrix td:first-child { font-weight: 600; color: #344054; text-align: left; }
+    .perm-matrix tr:last-child td { border-bottom: none; }
+    .pc  { color: #22c55e; font-size: 16px; }  /* check */
+    .pp  { color: #f59e0b; font-size: 16px; }  /* partial */
+    .px  { color: #d1d5db; font-size: 16px; }  /* none */
+
+    .user-kpi-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 14px; margin-bottom: 20px;
+    }
+    @media(max-width:900px) { .user-kpi-grid { grid-template-columns: repeat(2,1fr); } }
+
+    .nav-hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -203,6 +265,70 @@
     </div>
   </div>
 
+  <!-- ═══════════════ MODAL CREAR USUARIO ═══════════════ -->
+  <div id="createUserModal" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:560px">
+      <div class="modal-head">
+        <h3>Nuevo usuario</h3>
+        <button class="modal-close" onclick="closeUserModal('createUserModal')">✕</button>
+      </div>
+      <form id="createUserForm" class="form-grid">
+        <label>Nombre completo<input id="cuName" required placeholder="Ej. Ana García"></label>
+        <label>Correo electrónico<input id="cuEmail" type="email" required placeholder="ana@empresa.com"></label>
+        <label>Contraseña inicial<input id="cuPassword" type="password" required placeholder="Mínimo 6 caracteres" minlength="6"></label>
+        <label>Rol
+          <select id="cuRole">
+            <option value="Técnico">Técnico</option>
+            <option value="Consulta">Consulta</option>
+            <option value="Supervisor">Supervisor</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </label>
+        <label>Área<input id="cuArea" placeholder="Ej. Infraestructura"></label>
+        <label style="grid-column:1/-1">
+          <span style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="cuActive" checked style="width:auto;margin:0">
+            Usuario activo desde el inicio
+          </span>
+        </label>
+        <button class="primary wide" type="submit">Crear usuario</button>
+        <p id="cuMsg" class="muted wide" style="margin:0;font-size:13px"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL EDITAR USUARIO ═══════════════ -->
+  <div id="editUserModal" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:560px">
+      <div class="modal-head">
+        <h3>Editar usuario</h3>
+        <button class="modal-close" onclick="closeUserModal('editUserModal')">✕</button>
+      </div>
+      <form id="editUserForm" class="form-grid">
+        <input type="hidden" id="euId">
+        <input type="hidden" id="euEmail">
+        <label>Nombre completo<input id="euName" required></label>
+        <label>Correo (solo lectura)<input id="euEmailDisplay" disabled style="background:#f5f7fb;color:#9ca3af"></label>
+        <label>Rol
+          <select id="euRole">
+            <option value="Técnico">Técnico</option>
+            <option value="Consulta">Consulta</option>
+            <option value="Supervisor">Supervisor</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </label>
+        <label>Área<input id="euArea" placeholder="Ej. Infraestructura"></label>
+        <label class="wide" style="flex-direction:row;align-items:center;gap:10px;margin-top:4px">
+          <span style="font-weight:700;font-size:13px">Usuario activo</span>
+          <button type="button" id="euToggle" class="toggle-btn on" onclick="toggleEuActive()"></button>
+          <span id="euActiveLabel" style="font-size:12px;color:#687386">Activo</span>
+        </label>
+        <button class="primary wide" type="submit">Guardar cambios</button>
+        <p id="euMsg" class="muted wide" style="margin:0;font-size:13px"></p>
+      </form>
+    </div>
+  </div>
+
   <!-- ═══════════════ SIDEBAR (sin cambios) ═══════════════ -->
   <aside class="sidebar">
     <img class="sidebar-logo" src="data:image/png;base64,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" alt="alterna">
@@ -218,6 +344,10 @@
       <a href="#" data-view="nueva">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         Nueva
+      </a>
+      <a href="#" data-view="usuarios" id="navUsuarios" class="nav-hidden">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Usuarios
       </a>
     </nav>
     <button id="logout" class="ghost">Cerrar sesión</button>
@@ -424,6 +554,131 @@
     </section>
     </div><!-- /view-nueva -->
 
+    <!-- ══════════ VISTA: USUARIOS ══════════ -->
+    <div id="view-usuarios" class="spa-view" style="display:none">
+
+      <header class="topbar" style="margin-bottom:20px">
+        <div>
+          <h1 style="margin:0 0 2px;font-size:22px">Usuarios</h1>
+          <p class="muted" id="userSubtitle" style="margin:0;font-size:13px">Gestión de accesos y permisos</p>
+        </div>
+        <button class="primary" onclick="openCreateUser()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo usuario
+        </button>
+      </header>
+
+      <!-- KPIs de usuarios -->
+      <section class="user-kpi-grid">
+        <div class="kpi k-blue">
+          <div class="kpi-label">Total usuarios</div>
+          <div class="kpi-val" id="ukTotal">–</div>
+          <div class="kpi-sub">registrados</div>
+          <div class="kpi-icon">👥</div>
+        </div>
+        <div class="kpi k-green">
+          <div class="kpi-label">Activos</div>
+          <div class="kpi-val" id="ukActive">–</div>
+          <div class="kpi-sub">con acceso habilitado</div>
+          <div class="kpi-icon">✅</div>
+        </div>
+        <div class="kpi k-amber">
+          <div class="kpi-label">Inactivos</div>
+          <div class="kpi-val" id="ukInactive">–</div>
+          <div class="kpi-sub">acceso suspendido</div>
+          <div class="kpi-icon">🔒</div>
+        </div>
+        <div class="kpi k-purple">
+          <div class="kpi-label">Administradores</div>
+          <div class="kpi-val" id="ukAdmins">–</div>
+          <div class="kpi-sub">con acceso total</div>
+          <div class="kpi-icon">🛡️</div>
+        </div>
+      </section>
+
+      <!-- Matriz de permisos -->
+      <div class="panel-dash" style="margin-bottom:18px">
+        <p class="panel-title"><span>🔐</span> Matriz de permisos por rol</p>
+        <div class="table-wrap">
+          <table class="perm-matrix">
+            <thead>
+              <tr>
+                <th>Módulo / Acción</th>
+                <th><span class="role-badge role-admin">Admin</span></th>
+                <th><span class="role-badge role-supervisor">Supervisor</span></th>
+                <th><span class="role-badge role-tecnico">Técnico</span></th>
+                <th><span class="role-badge role-consulta">Consulta</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Dashboard</td><td><span class="pc">●</span> Completo</td><td><span class="pc">●</span> Completo</td><td><span class="pp">◐</span> Propio</td><td><span class="pp">◐</span> Ver</td></tr>
+              <tr><td>Actividades — Ver</td><td><span class="pc">●</span></td><td><span class="pc">●</span></td><td><span class="pp">◐</span> Propias</td><td><span class="pc">●</span></td></tr>
+              <tr><td>Actividades — Crear</td><td><span class="pc">●</span></td><td><span class="pc">●</span></td><td><span class="pc">●</span></td><td><span class="px">○</span></td></tr>
+              <tr><td>Actividades — Editar</td><td><span class="pc">●</span></td><td><span class="pc">●</span></td><td><span class="pp">◐</span> Propias</td><td><span class="px">○</span></td></tr>
+              <tr><td>Actividades — Eliminar</td><td><span class="pc">●</span></td><td><span class="pc">●</span></td><td><span class="px">○</span></td><td><span class="px">○</span></td></tr>
+              <tr><td>Usuarios — Ver</td><td><span class="pc">●</span></td><td><span class="pc">●</span></td><td><span class="px">○</span></td><td><span class="px">○</span></td></tr>
+              <tr><td>Usuarios — Crear / Editar</td><td><span class="pc">●</span></td><td><span class="px">○</span></td><td><span class="px">○</span></td><td><span class="px">○</span></td></tr>
+              <tr><td>Usuarios — Activar / Desactivar</td><td><span class="pc">●</span></td><td><span class="px">○</span></td><td><span class="px">○</span></td><td><span class="px">○</span></td></tr>
+              <tr><td>Restablecer contraseña</td><td><span class="pc">●</span></td><td><span class="pp">◐</span> Propia</td><td><span class="pp">◐</span> Propia</td><td><span class="pp">◐</span> Propia</td></tr>
+              <tr><td>Exportar CSV</td><td><span class="pc">●</span></td><td><span class="pc">●</span></td><td><span class="px">○</span></td><td><span class="px">○</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin:14px 0 0;font-size:11px;color:#9ca3af">
+          <span class="pc">●</span> Acceso completo &nbsp;·&nbsp;
+          <span class="pp">◐</span> Acceso parcial &nbsp;·&nbsp;
+          <span class="px">○</span> Sin acceso
+        </p>
+      </div>
+
+      <!-- Tabla de usuarios -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Directorio de usuarios</h2>
+          <div class="filters">
+            <input id="userSearch" class="search" placeholder="Buscar usuario…" style="width:180px" oninput="renderUsers()">
+            <select id="filterUserRole" class="search" style="width:auto" onchange="renderUsers()">
+              <option value="">Todos los roles</option>
+              <option>Admin</option>
+              <option>Supervisor</option>
+              <option>Técnico</option>
+              <option>Consulta</option>
+            </select>
+            <select id="filterUserStatus" class="search" style="width:auto" onchange="renderUsers()">
+              <option value="">Todos</option>
+              <option value="active">Activos</option>
+              <option value="inactive">Inactivos</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Área</th>
+                <th>Estado</th>
+                <th>Último acceso</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="userTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Nota SQL -->
+      <div style="margin-top:16px;padding:16px 20px;background:#f8fafc;border:1px dashed #d0d7e3;border-radius:12px;font-size:12px;color:#687386;line-height:1.6">
+        <strong style="color:#344054">⚙️ Configuración de base de datos requerida</strong><br>
+        Para que esta sección funcione completamente, la tabla <code>profiles</code> debe tener los campos:
+        <code>email TEXT</code>, <code>area TEXT</code>, <code>is_active BOOLEAN DEFAULT true</code>, <code>last_seen TIMESTAMPTZ</code>.
+        El reset de contraseña usa <code>supabase.auth.resetPasswordForEmail()</code> — el usuario recibirá un email.
+        La creación de usuarios usa <code>supabase.auth.signUp()</code> — requiere que el registro esté habilitado en Supabase Auth.
+      </div>
+
+    </div><!-- /view-usuarios -->
+
   </main>
 
   <!-- ═══════════════ SCRIPTS ═══════════════ -->
@@ -439,6 +694,9 @@
     let activePeriod = 'mes';
     let customFrom = null;
     let customTo   = null;
+    let currentUser = null;   // profile del usuario logueado
+    let allUsers    = [];     // lista de profiles para el módulo usuarios
+    let euIsActive  = true;   // estado del toggle en modal editar
 
     /* ══════════════════════════════════════════
        INIT
@@ -446,23 +704,79 @@
     async function init() {
       const session = await requireAuth();
       if (!session) return;
+
       const { data: profile } = await supabaseClient
-        .from('profiles').select('full_name,role').eq('id', session.user.id).maybeSingle();
+        .from('profiles')
+        .select('id,full_name,role,email,area,is_active,last_seen')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      currentUser = {
+        id:        session.user.id,
+        email:     session.user.email,
+        full_name: profile?.full_name || session.user.email,
+        role:      profile?.role      || 'Técnico',
+        area:      profile?.area      || '',
+        is_active: profile?.is_active ?? true,
+      };
+
       document.getElementById('welcome').textContent =
-        `${profile?.full_name || session.user.email} · ${profile?.role || 'user'}`;
+        `${currentUser.full_name} · ${currentUser.role}`;
+
+      // Actualizar last_seen silenciosamente
+      supabaseClient.from('profiles')
+        .update({ last_seen: new Date().toISOString(), email: currentUser.email })
+        .eq('id', currentUser.id)
+        .then(() => {});
+
+      applyRoleRestrictions();
       await loadActivities();
       setupPeriodBar();
     }
 
     /* ══════════════════════════════════════════
-       CARGAR ACTIVIDADES
-       — Ahora incluye completed_at, created_at, importance
+       RESTRICCIONES POR ROL
+    ══════════════════════════════════════════ */
+    function applyRoleRestrictions() {
+      const role = currentUser?.role || 'Técnico';
+
+      // Nav: Usuarios solo para Admin y Supervisor (vista solo lectura para Supervisor)
+      const navU = document.getElementById('navUsuarios');
+      if (role === 'Admin' || role === 'Supervisor') {
+        navU.classList.remove('nav-hidden');
+      }
+
+      // Nav: "Nueva" oculta para Consulta
+      const navNueva = document.querySelector('[data-view="nueva"]');
+      if (role === 'Consulta') navNueva.classList.add('nav-hidden');
+
+      // Botón exportar CSV: solo Admin y Supervisor
+      const csvBtn = document.querySelector('button[onclick="exportCSV()"]');
+      if (csvBtn && role !== 'Admin' && role !== 'Supervisor') {
+        csvBtn.style.display = 'none';
+      }
+
+      // Botón "+ Nueva" del topbar: oculto para Consulta
+      const topNueva = document.querySelector('[data-view="nueva"].primary');
+      if (topNueva && role === 'Consulta') topNueva.style.display = 'none';
+    }
+
+    /* ══════════════════════════════════════════
+       CARGAR ACTIVIDADES (con filtro por rol)
     ══════════════════════════════════════════ */
     async function loadActivities() {
-      const { data, error } = await supabaseClient
+      const role = currentUser?.role || 'Técnico';
+      let query = supabaseClient
         .from('activities')
         .select('id,title,importance,priority,status,due_date,completed_at,created_at,assigned_to,notes,projects(name),areas(name)')
         .order('due_date', { ascending: true, nullsFirst: false });
+
+      // Técnico: solo ve sus propias actividades
+      if (role === 'Técnico' && currentUser?.full_name) {
+        query = query.eq('assigned_to', currentUser.full_name);
+      }
+
+      const { data, error } = await query;
       if (error) { alert(error.message); return; }
       activities = data || [];
       renderDashboard();
@@ -782,6 +1096,7 @@
       const q  = document.getElementById('search').value.toLowerCase();
       const fs = document.getElementById('filterStatus').value;
       const fp = document.getElementById('filterPriority').value;
+      const role = currentUser?.role || 'Técnico';
 
       const filtered = activities.filter(a => {
         const text = [a.title,a.projects?.name,a.areas?.name,a.assigned_to,a.status]
@@ -792,20 +1107,33 @@
       const overdueClass = (a) =>
         a.due_date && a.due_date < today && a.status !== 'Terminado' ? 'row-overdue' : '';
 
+      // Permisos de acción según rol
+      const canEdit   = role === 'Admin' || role === 'Supervisor';
+      const canDelete = role === 'Admin' || role === 'Supervisor';
+      const canEditOwn = role === 'Técnico'; // técnico puede editar las suyas
+
       document.getElementById('activityTable').innerHTML = filtered.length
-        ? filtered.map(a => `
-          <tr class="${overdueClass(a)}">
-            <td><strong>${esc(a.title)}</strong>${a.notes ? `<br><small class="note-preview">${esc(a.notes.slice(0,60))}${a.notes.length>60?'…':''}</small>` : ''}</td>
-            <td>${esc(a.projects?.name || '—')}</td>
-            <td><span class="pill ${a.priority.toLowerCase()}">${a.priority}</span></td>
-            <td><span class="pill status-${a.status.replace(/\s+/g,'-').toLowerCase()}">${a.status}</span></td>
-            <td>${a.due_date || '—'}</td>
-            <td>${esc(a.assigned_to || '—')}</td>
-            <td class="row-actions">
-              <button class="act-btn" onclick="openEdit(${JSON.stringify(a).split('"').join('&quot;')})">✏️</button>
-              <button class="act-btn" onclick="deleteActivity('${a.id}','${esc(a.title)}')">🗑️</button>
-            </td>
-          </tr>`).join('')
+        ? filtered.map(a => {
+            const isOwn = a.assigned_to === currentUser?.full_name;
+            const showEdit   = canEdit || (canEditOwn && isOwn);
+            const showDelete = canDelete;
+            const actions = (showEdit || showDelete)
+              ? `<td class="row-actions">
+                  ${showEdit   ? `<button class="act-btn" title="Editar" onclick="openEdit(${JSON.stringify(a).split('"').join('&quot;')})">✏️</button>` : ''}
+                  ${showDelete ? `<button class="act-btn" title="Eliminar" onclick="deleteActivity('${a.id}','${esc(a.title)}')">🗑️</button>` : ''}
+                </td>`
+              : '<td></td>';
+            return `
+            <tr class="${overdueClass(a)}">
+              <td><strong>${esc(a.title)}</strong>${a.notes ? `<br><small class="note-preview">${esc(a.notes.slice(0,60))}${a.notes.length>60?'…':''}</small>` : ''}</td>
+              <td>${esc(a.projects?.name || '—')}</td>
+              <td><span class="pill ${a.priority.toLowerCase()}">${a.priority}</span></td>
+              <td><span class="pill status-${a.status.replace(/\s+/g,'-').toLowerCase()}">${a.status}</span></td>
+              <td>${a.due_date || '—'}</td>
+              <td>${esc(a.assigned_to || '—')}</td>
+              ${actions}
+            </tr>`;
+          }).join('')
         : '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px">Sin resultados</td></tr>';
     }
 
@@ -943,10 +1271,241 @@
     document.getElementById('logout').addEventListener('click', signOut);
 
     /* ══════════════════════════════════════════
+       USER MANAGEMENT — CARGAR USUARIOS
+    ══════════════════════════════════════════ */
+    async function loadUsers() {
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('id,full_name,email,role,area,is_active,last_seen')
+        .order('full_name');
+      if (error) { console.error(error); return; }
+      allUsers = data || [];
+      renderUserKpis();
+      renderUsers();
+    }
+
+    function renderUserKpis() {
+      const total    = allUsers.length;
+      const active   = allUsers.filter(u => u.is_active !== false).length;
+      const inactive = total - active;
+      const admins   = allUsers.filter(u => u.role === 'Admin').length;
+      document.getElementById('ukTotal').textContent   = total;
+      document.getElementById('ukActive').textContent  = active;
+      document.getElementById('ukInactive').textContent= inactive;
+      document.getElementById('ukAdmins').textContent  = admins;
+      document.getElementById('userSubtitle').textContent =
+        `${total} usuario${total !== 1 ? 's' : ''} · ${active} activo${active !== 1 ? 's' : ''}`;
+    }
+
+    function renderUsers() {
+      const q      = (document.getElementById('userSearch')?.value || '').toLowerCase();
+      const fRole  = document.getElementById('filterUserRole')?.value || '';
+      const fStatus= document.getElementById('filterUserStatus')?.value || '';
+      const role   = currentUser?.role || 'Técnico';
+      const isAdmin = role === 'Admin';
+
+      const filtered = allUsers.filter(u => {
+        const txt = [u.full_name, u.email, u.role, u.area].filter(Boolean).join(' ').toLowerCase();
+        const statusMatch = !fStatus
+          || (fStatus === 'active'   && u.is_active !== false)
+          || (fStatus === 'inactive' && u.is_active === false);
+        return txt.includes(q) && (!fRole || u.role === fRole) && statusMatch;
+      });
+
+      const tbody = document.getElementById('userTable');
+      if (!tbody) return;
+
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:30px">Sin resultados</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(u => {
+        const isActive = u.is_active !== false;
+        const initials = (u.full_name || u.email || '?').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+        const color    = avatarColor(u.full_name || u.email || '');
+        const lastSeen = u.last_seen ? relativeTime(u.last_seen) : 'Nunca';
+        const roleClass = 'role-' + (u.role || 'Técnico').toLowerCase().replace('é','e').replace('ú','u');
+        const statusPill = isActive
+          ? '<span class="status-pill-on">Activo</span>'
+          : '<span class="status-pill-off">Inactivo</span>';
+
+        // Acciones según rol
+        const actions = isAdmin ? `
+          <button class="act-btn" title="Editar" onclick="openEditUser(${JSON.stringify(u).split('"').join('&quot;')})">✏️</button>
+          <button class="act-btn" title="Reset contraseña" onclick="resetPassword('${u.email || ''}','${esc(u.full_name || '')}')" style="font-size:13px">🔑</button>
+          ${u.id !== currentUser?.id ? `<button class="act-btn" title="${isActive ? 'Desactivar' : 'Activar'}" onclick="toggleUserActive('${u.id}',${!isActive})">${isActive ? '🔒' : '🔓'}</button>` : ''}
+        ` : (role === 'Supervisor' ? `<span style="font-size:11px;color:#9ca3af">Solo lectura</span>` : '');
+
+        return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar" style="background:${color}">${initials}</div>
+              <div>
+                <div class="user-name">${esc(u.full_name || '—')}</div>
+                <div class="user-email">${esc(u.email || '—')}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="role-badge ${roleClass}">${u.role || 'Técnico'}</span></td>
+          <td style="font-size:12px;color:#687386">${esc(u.area || '—')}</td>
+          <td>${statusPill}</td>
+          <td style="font-size:12px;color:#9ca3af;white-space:nowrap">${lastSeen}</td>
+          <td class="row-actions" style="white-space:nowrap">${actions}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    /* ── Crear usuario ── */
+    function openCreateUser() {
+      document.getElementById('createUserForm').reset();
+      document.getElementById('cuMsg').textContent = '';
+      document.getElementById('createUserModal').style.display = 'flex';
+    }
+
+    document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('cuMsg');
+      const btn = e.target.querySelector('button[type="submit"]');
+      msg.textContent = 'Creando usuario…'; btn.disabled = true;
+
+      const email    = document.getElementById('cuEmail').value.trim();
+      const password = document.getElementById('cuPassword').value;
+      const name     = document.getElementById('cuName').value.trim();
+      const role     = document.getElementById('cuRole').value;
+      const area     = document.getElementById('cuArea').value.trim();
+      const isActive = document.getElementById('cuActive').checked;
+
+      // Crear en Supabase Auth
+      const { data: authData, error: authErr } = await supabaseClient.auth.signUp({
+        email, password,
+        options: { data: { full_name: name } }
+      });
+
+      btn.disabled = false;
+
+      if (authErr) {
+        msg.textContent = '✕ ' + authErr.message; return;
+      }
+
+      // Insertar/actualizar en profiles
+      const userId = authData?.user?.id;
+      if (userId) {
+        await supabaseClient.from('profiles').upsert({
+          id: userId, full_name: name, email,
+          role, area: area || null, is_active: isActive
+        });
+      }
+
+      msg.textContent = '✓ Usuario creado. Recibirá un email de confirmación.';
+      msg.style.color = '#166534';
+      await loadUsers();
+      setTimeout(() => closeUserModal('createUserModal'), 1800);
+    });
+
+    /* ── Editar usuario ── */
+    function openEditUser(u) {
+      document.getElementById('euId').value           = u.id;
+      document.getElementById('euEmail').value        = u.email || '';
+      document.getElementById('euEmailDisplay').value = u.email || '';
+      document.getElementById('euName').value         = u.full_name || '';
+      document.getElementById('euRole').value         = u.role || 'Técnico';
+      document.getElementById('euArea').value         = u.area || '';
+      euIsActive = u.is_active !== false;
+      updateEuToggle();
+      document.getElementById('euMsg').textContent = '';
+      document.getElementById('editUserModal').style.display = 'flex';
+    }
+
+    function toggleEuActive() {
+      euIsActive = !euIsActive;
+      updateEuToggle();
+    }
+    function updateEuToggle() {
+      const btn = document.getElementById('euToggle');
+      const lbl = document.getElementById('euActiveLabel');
+      btn.className = 'toggle-btn ' + (euIsActive ? 'on' : 'off');
+      lbl.textContent = euIsActive ? 'Activo' : 'Inactivo';
+    }
+
+    document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('euMsg');
+      const btn = e.target.querySelector('button[type="submit"]');
+      msg.textContent = 'Guardando…'; btn.disabled = true;
+
+      const id   = document.getElementById('euId').value;
+      const name = document.getElementById('euName').value.trim();
+      const role = document.getElementById('euRole').value;
+      const area = document.getElementById('euArea').value.trim();
+
+      const { error } = await supabaseClient.from('profiles').update({
+        full_name: name, role, area: area || null, is_active: euIsActive
+      }).eq('id', id);
+
+      btn.disabled = false;
+      if (error) { msg.textContent = '✕ ' + error.message; return; }
+
+      msg.textContent = '✓ Cambios guardados.';
+      msg.style.color = '#166534';
+      await loadUsers();
+      setTimeout(() => closeUserModal('editUserModal'), 1200);
+    });
+
+    /* ── Toggle activo/inactivo (desde tabla) ── */
+    async function toggleUserActive(id, newState) {
+      const label = newState ? 'activar' : 'desactivar';
+      if (!confirm(`¿${label.charAt(0).toUpperCase() + label.slice(1)} este usuario?`)) return;
+      const { error } = await supabaseClient.from('profiles').update({ is_active: newState }).eq('id', id);
+      if (error) { alert(error.message); return; }
+      await loadUsers();
+    }
+
+    /* ── Reset contraseña ── */
+    async function resetPassword(email, name) {
+      if (!email) { alert('Este usuario no tiene email registrado.'); return; }
+      if (!confirm(`¿Enviar email de reset de contraseña a ${name} (${email})?`)) return;
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/index.html'
+      });
+      if (error) { alert('Error: ' + error.message); return; }
+      alert(`✓ Email de restablecimiento enviado a ${email}`);
+    }
+
+    /* ── Cerrar modales de usuario ── */
+    function closeUserModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+    ['createUserModal','editUserModal'].forEach(id => {
+      document.getElementById(id).addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeUserModal(id);
+      });
+    });
+
+    /* ── Helpers ── */
+    function avatarColor(name) {
+      const palette = ['#4d6fe8','#22c55e','#f59e0b','#ef4444','#a855f7','#14b8a6','#6366f1','#ec4899'];
+      let sum = 0; for (const c of String(name)) sum += c.charCodeAt(0);
+      return palette[sum % palette.length];
+    }
+    function relativeTime(iso) {
+      const diff = Date.now() - new Date(iso).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1)   return 'Hace un momento';
+      if (mins < 60)  return `Hace ${mins} min`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24)   return `Hace ${hrs} h`;
+      const days = Math.floor(hrs / 24);
+      if (days < 7)   return `Hace ${days} día${days !== 1 ? 's' : ''}`;
+      return new Date(iso).toLocaleDateString('es', { day:'numeric', month:'short' });
+    }
+
+    /* ══════════════════════════════════════════
        ROUTER SPA — muestra una vista a la vez
     ══════════════════════════════════════════ */
     function showView(name) {
-      const views = ['dashboard', 'actividades', 'nueva'];
+      const views = ['dashboard', 'actividades', 'nueva', 'usuarios'];
       views.forEach(v => {
         const el = document.getElementById('view-' + v);
         if (el) el.style.display = v === name ? '' : 'none';
@@ -954,6 +1513,8 @@
       document.querySelectorAll('nav [data-view]').forEach(a => {
         a.classList.toggle('active', a.dataset.view === name);
       });
+      // Cargar usuarios la primera vez que se abre esa vista
+      if (name === 'usuarios' && !allUsers.length) loadUsers();
     }
 
     document.addEventListener('click', (e) => {
@@ -970,5 +1531,3 @@
   </script>
 </body>
 </html>
-
-
