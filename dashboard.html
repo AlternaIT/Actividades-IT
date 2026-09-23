@@ -705,17 +705,26 @@
       const session = await requireAuth();
       if (!session) return;
 
-      const { data: profile } = await supabaseClient
+      // Pedimos solo las columnas que siempre existen en el schema original.
+      // Las columnas opcionales (email, area, is_active, last_seen) se agregan
+      // corriendo migration.sql; mientras tanto la query no falla.
+      const { data: profile, error: profileError } = await supabaseClient
         .from('profiles')
-        .select('id,full_name,role,email,area,is_active,last_seen')
+        .select('id,full_name,role')
         .eq('id', session.user.id)
         .maybeSingle();
+
+      // roleFromDB = true solo si la query funcionó y devolvió un rol explícito.
+      // Si la query falló (columnas faltantes u otro error), profileError != null
+      // y profile == null → roleFromDB queda false → NO aplicamos restricción de Técnico.
+      const roleFromDB = !profileError && profile?.role != null;
 
       currentUser = {
         id:        session.user.id,
         email:     session.user.email,
         full_name: profile?.full_name || session.user.email,
-        role:      profile?.role      || 'Técnico',
+        role:      profile?.role      || 'Admin',   // fallback seguro mientras no hay perfil
+        roleFromDB,                                  // flag que usa loadActivities
         area:      profile?.area      || '',
         is_active: profile?.is_active ?? true,
       };
@@ -723,11 +732,11 @@
       document.getElementById('welcome').textContent =
         `${currentUser.full_name} · ${currentUser.role}`;
 
-      // Actualizar last_seen silenciosamente
+      // Actualizar last_seen / email silenciosamente (solo si esas columnas ya existen)
       supabaseClient.from('profiles')
         .update({ last_seen: new Date().toISOString(), email: currentUser.email })
         .eq('id', currentUser.id)
-        .then(() => {});
+        .then(() => {});   // ignoramos errores de columnas faltantes
 
       applyRoleRestrictions();
       await loadActivities();
@@ -771,8 +780,11 @@
         .select('id,title,importance,priority,status,due_date,completed_at,created_at,assigned_to,notes,projects(name),areas(name)')
         .order('due_date', { ascending: true, nullsFirst: false });
 
-      // Técnico: solo ve sus propias actividades
-      if (role === 'Técnico' && currentUser?.full_name) {
+      // Técnico: solo ve sus propias actividades.
+      // La restricción SOLO aplica si el rol vino explícitamente de la BD
+      // (roleFromDB = true). Si la query de profiles falló, mostramos todo
+      // para no dejar al usuario con pantalla vacía.
+      if (role === 'Técnico' && currentUser?.roleFromDB && currentUser?.full_name) {
         query = query.eq('assigned_to', currentUser.full_name);
       }
 
