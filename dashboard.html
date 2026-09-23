@@ -5,9 +5,184 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gestión TI — Dashboard</title>
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ─── PERIOD SELECTOR ─── */
+    .period-bar {
+      display: flex; gap: 4px; align-items: center;
+      background: #f0f2f7; border-radius: 10px; padding: 4px;
+    }
+    .period-btn {
+      border: none; background: transparent; color: #687386;
+      font-size: 12px; font-weight: 600; padding: 6px 13px;
+      border-radius: 7px; cursor: pointer; transition: all .15s;
+      white-space: nowrap;
+    }
+    .period-btn.active {
+      background: #fff; color: #1a3bbf;
+      box-shadow: 0 1px 4px #0000001a;
+    }
+    .period-btn:hover:not(.active) { color: #344054; }
+    #customRange {
+      display: none; gap: 8px; align-items: center; margin-left: 6px;
+    }
+    #customRange.visible { display: flex; }
+    #customRange input {
+      border: 1px solid #d8dee9; border-radius: 8px;
+      padding: 6px 10px; font-size: 12px; font-family: inherit;
+      color: #172033; background: #fff; outline: none; cursor: pointer;
+    }
+    #customRange input:focus { border-color: #4d6fe8; }
+
+    /* ─── KPI GRID ─── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px; margin-bottom: 20px;
+    }
+    .kpi {
+      background: #fff; border: 1px solid #e6eaf0;
+      border-radius: 14px; padding: 20px 22px;
+      position: relative; overflow: hidden;
+    }
+    .kpi::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: var(--kpi-color, #4d6fe8);
+    }
+    .kpi-label {
+      font-size: 11px; font-weight: 700; color: #8a94a6;
+      text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px;
+    }
+    .kpi-val {
+      font-size: 32px; font-weight: 800; color: #172033;
+      line-height: 1; margin-bottom: 4px;
+    }
+    .kpi-sub {
+      font-size: 12px; color: #9ca3af;
+    }
+    .kpi-icon {
+      position: absolute; right: 18px; top: 50%;
+      transform: translateY(-50%);
+      opacity: .08; font-size: 42px; line-height: 1;
+    }
+    .kpi.k-blue  { --kpi-color: #4d6fe8; }
+    .kpi.k-green { --kpi-color: #22c55e; }
+    .kpi.k-amber { --kpi-color: #f59e0b; }
+    .kpi.k-slate { --kpi-color: #94a3b8; }
+    .kpi.k-red   { --kpi-color: #ef4444; }
+    .kpi.k-indigo{ --kpi-color: #6366f1; }
+    .kpi.k-teal  { --kpi-color: #14b8a6; }
+    .kpi.k-purple{ --kpi-color: #a855f7; }
+
+    /* ─── COMPLETION RING ─── */
+    .ring-wrap {
+      display: flex; align-items: center; gap: 28px;
+    }
+    .ring-svg { flex-shrink: 0; }
+    .ring-legend { flex: 1; display: grid; gap: 10px; }
+    .ring-item {
+      display: flex; align-items: center; gap: 10px; font-size: 13px;
+    }
+    .ring-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .ring-item-label { color: #687386; flex: 1; }
+    .ring-item-val { font-weight: 700; color: #172033; }
+
+    /* ─── BAR CHART ROWS ─── */
+    .bar2-row { margin: 10px 0; }
+    .bar2-head {
+      display: flex; justify-content: space-between;
+      font-size: 12px; margin-bottom: 5px; color: #344054;
+    }
+    .bar2-head span { font-weight: 600; }
+    .bar2-head small { color: #9ca3af; }
+    .bar2-track {
+      height: 7px; background: #edf0f5;
+      border-radius: 20px; overflow: hidden;
+    }
+    .bar2-fill {
+      height: 100%; border-radius: 20px; transition: width .5s ease;
+    }
+
+    /* ─── TREND CHART ─── */
+    .trend-wrap { position: relative; height: 130px; }
+    .trend-svg { width: 100%; height: 100%; }
+    .trend-labels {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: #9ca3af; margin-top: 6px;
+      padding: 0 4px;
+    }
+
+    /* ─── ASSIGNEE TABLE ─── */
+    .assignee-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 9px 0; border-bottom: 1px solid #f0f2f7;
+    }
+    .assignee-row:last-child { border-bottom: none; }
+    .assignee-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #e8ecf8; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 700;
+      color: #4d6fe8; flex-shrink: 0;
+    }
+    .assignee-name { flex: 1; font-size: 13px; font-weight: 600; color: #172033; }
+    .assignee-meta { font-size: 11px; color: #9ca3af; }
+    .assignee-count {
+      font-size: 20px; font-weight: 800; color: #172033;
+      min-width: 28px; text-align: right;
+    }
+    .mini-pills { display: flex; gap: 4px; }
+    .mini-pill {
+      font-size: 10px; font-weight: 700; padding: 2px 7px;
+      border-radius: 999px;
+    }
+    .mini-pill.t { background: #dcfce7; color: #166534; }
+    .mini-pill.p { background: #dbeafe; color: #1e40af; }
+    .mini-pill.n { background: #f3f4f6; color: #374151; }
+
+    /* ─── DASHBOARD GRID LAYOUT ─── */
+    .db-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+    .db-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+    .db-grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 18px; margin-bottom: 18px; }
+    .db-grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 18px; }
+
+    /* ─── PANEL OVERRIDES ─── */
+    .panel-dash { background: #fff; border: 1px solid #e6eaf0; border-radius: 14px; padding: 22px; }
+    .panel-title {
+      font-size: 13px; font-weight: 700; color: #172033;
+      margin: 0 0 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .panel-title span { font-size: 16px; }
+    .panel-title small {
+      margin-left: auto; font-size: 11px; font-weight: 600;
+      color: #9ca3af; text-transform: none; letter-spacing: 0;
+    }
+
+    /* ─── EMPTY STATE ─── */
+    .empty-dash {
+      text-align: center; padding: 30px 0; color: #9ca3af; font-size: 13px;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media(max-width:1200px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .db-grid-3 { grid-template-columns: 1fr 1fr; }
+      .db-grid-1-2, .db-grid-2-1 { grid-template-columns: 1fr; }
+    }
+    @media(max-width:800px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .db-grid-2, .db-grid-3 { grid-template-columns: 1fr; }
+      .period-bar { flex-wrap: wrap; }
+    }
+    @media(max-width:500px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-  <!-- MODAL EDITAR -->
+
+  <!-- ═══════════════ MODAL EDITAR (sin cambios) ═══════════════ -->
   <div id="editModal" class="modal-overlay" style="display:none">
     <div class="modal-box">
       <div class="modal-head"><h3>Editar actividad</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
@@ -28,6 +203,7 @@
     </div>
   </div>
 
+  <!-- ═══════════════ SIDEBAR (sin cambios) ═══════════════ -->
   <aside class="sidebar">
     <img class="sidebar-logo" src="data:image/png;base64,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" alt="alterna">
     <nav>
@@ -48,39 +224,150 @@
   </aside>
 
   <main class="main">
-    <header class="topbar">
+
+    <!-- ─── ENCABEZADO ─── -->
+    <header class="topbar" style="margin-bottom:20px">
       <div>
-        <h1>Dashboard</h1>
-        <p class="muted" id="welcome">Cargando...</p>
+        <h1 style="margin:0 0 2px;font-size:22px">Dashboard</h1>
+        <p class="muted" id="welcome" style="margin:0;font-size:13px">Cargando...</p>
       </div>
-      <div style="display:flex;gap:10px;align-items:center">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="period-bar">
+          <button class="period-btn" data-p="hoy">Hoy</button>
+          <button class="period-btn" data-p="semana">Esta semana</button>
+          <button class="period-btn active" data-p="mes">Este mes</button>
+          <button class="period-btn" data-p="anio">Este año</button>
+          <button class="period-btn" data-p="todo">Todo</button>
+          <button class="period-btn" data-p="custom">Personalizado</button>
+        </div>
+        <div id="customRange">
+          <input type="date" id="customFrom">
+          <span style="color:#9ca3af;font-size:12px">→</span>
+          <input type="date" id="customTo">
+        </div>
         <button class="btn-outline" onclick="exportCSV()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exportar CSV
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV
         </button>
-        <a href="#nueva" class="primary btn-new">+ Nueva actividad</a>
+        <a href="#nueva" class="primary">+ Nueva</a>
       </div>
     </header>
 
-    <section class="cards">
-      <article class="stat"><span>Total</span><strong id="total">0</strong></article>
-      <article class="stat"><span>En proceso</span><strong id="progress">0</strong></article>
-      <article class="stat"><span>No iniciadas</span><strong id="pending">0</strong></article>
-      <article class="stat"><span>Terminadas</span><strong id="done">0</strong></article>
-      <article class="stat danger"><span>Vencidas</span><strong id="overdue">0</strong></article>
+    <!-- ─── KPIs ─── -->
+    <section class="kpi-grid" id="kpiGrid">
+      <div class="kpi k-blue">
+        <div class="kpi-label">Total actividades</div>
+        <div class="kpi-val" id="kTotal">–</div>
+        <div class="kpi-sub" id="kTotalSub">en el período</div>
+        <div class="kpi-icon">📋</div>
+      </div>
+      <div class="kpi k-green">
+        <div class="kpi-label">Terminadas</div>
+        <div class="kpi-val" id="kDone">–</div>
+        <div class="kpi-sub" id="kDoneSub">–</div>
+        <div class="kpi-icon">✅</div>
+      </div>
+      <div class="kpi k-amber">
+        <div class="kpi-label">En proceso</div>
+        <div class="kpi-val" id="kProgress">–</div>
+        <div class="kpi-sub" id="kProgressSub">–</div>
+        <div class="kpi-icon">⚙️</div>
+      </div>
+      <div class="kpi k-slate">
+        <div class="kpi-label">No iniciadas</div>
+        <div class="kpi-val" id="kPending">–</div>
+        <div class="kpi-sub" id="kPendingSub">–</div>
+        <div class="kpi-icon">🕐</div>
+      </div>
+      <div class="kpi k-red">
+        <div class="kpi-label">Vencidas</div>
+        <div class="kpi-val" id="kOverdue">–</div>
+        <div class="kpi-sub">sin terminar con fecha pasada</div>
+        <div class="kpi-icon">⚠️</div>
+      </div>
+      <div class="kpi k-indigo">
+        <div class="kpi-label">Vencen hoy</div>
+        <div class="kpi-val" id="kToday">–</div>
+        <div class="kpi-sub">con fecha de entrega hoy</div>
+        <div class="kpi-icon">📅</div>
+      </div>
+      <div class="kpi k-teal">
+        <div class="kpi-label">Tasa de completado</div>
+        <div class="kpi-val" id="kRate">–</div>
+        <div class="kpi-sub">del total en el período</div>
+        <div class="kpi-icon">📈</div>
+      </div>
+      <div class="kpi k-purple">
+        <div class="kpi-label">Prioridad Alta</div>
+        <div class="kpi-val" id="kHigh">–</div>
+        <div class="kpi-sub" id="kHighSub">–</div>
+        <div class="kpi-icon">🔴</div>
+      </div>
     </section>
 
-    <section class="grid">
-      <article class="panel">
-        <div class="panel-head"><h2>Por estado</h2></div>
-        <div id="statusBars"></div>
-      </article>
-      <article class="panel">
-        <div class="panel-head"><h2>Por prioridad</h2></div>
-        <div id="priorityBars"></div>
-      </article>
+    <!-- ─── FILA 1: Distribución por estado + Distribución por prioridad + Importancia ─── -->
+    <section class="db-grid-3">
+
+      <!-- Donut estado -->
+      <div class="panel-dash">
+        <p class="panel-title"><span>◉</span> Por estado</p>
+        <div class="ring-wrap" id="statusRing">
+          <div class="empty-dash">Sin datos</div>
+        </div>
+      </div>
+
+      <!-- Barras prioridad -->
+      <div class="panel-dash">
+        <p class="panel-title"><span>▦</span> Por prioridad</p>
+        <div id="priorityBars2"></div>
+      </div>
+
+      <!-- Barras importancia -->
+      <div class="panel-dash">
+        <p class="panel-title"><span>◈</span> Por importancia</p>
+        <div id="importanceBars"></div>
+      </div>
+
     </section>
 
+    <!-- ─── FILA 2: Proyectos + Áreas ─── -->
+    <section class="db-grid-2">
+
+      <!-- Top proyectos -->
+      <div class="panel-dash">
+        <p class="panel-title"><span>🗂</span> Carga por proyecto <small>top 8</small></p>
+        <div id="projectBars"></div>
+      </div>
+
+      <!-- Top áreas -->
+      <div class="panel-dash">
+        <p class="panel-title"><span>🏢</span> Carga por área <small>top 8</small></p>
+        <div id="areaBars"></div>
+      </div>
+
+    </section>
+
+    <!-- ─── FILA 3: Asignados + Tendencia ─── -->
+    <section class="db-grid-1-2">
+
+      <!-- Asignados -->
+      <div class="panel-dash">
+        <p class="panel-title"><span>👤</span> Actividades por persona</p>
+        <div id="assigneelist"></div>
+      </div>
+
+      <!-- Tendencia semanal -->
+      <div class="panel-dash">
+        <p class="panel-title"><span>📊</span> Completadas por semana <small>últimas 8 semanas</small></p>
+        <div class="trend-wrap">
+          <svg class="trend-svg" id="trendSvg" viewBox="0 0 600 130" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="trend-labels" id="trendLabels"></div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════ MÓDULO ACTIVIDADES (sin cambios) ═══════════════ -->
     <section class="panel" id="actividades">
       <div class="panel-head">
         <h2>Actividades</h2>
@@ -110,6 +397,7 @@
       </div>
     </section>
 
+    <!-- ═══════════════ NUEVA ACTIVIDAD (sin cambios) ═══════════════ -->
     <section class="panel" id="nueva">
       <div class="panel-head"><h2>Nueva actividad</h2></div>
       <form id="activityForm" class="form-grid">
@@ -126,15 +414,26 @@
         <p id="formMsg" class="muted wide"></p>
       </form>
     </section>
+
   </main>
 
+  <!-- ═══════════════ SCRIPTS ═══════════════ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <script>
+    /* ══════════════════════════════════════════
+       STATE
+    ══════════════════════════════════════════ */
     let activities = [];
+    let activePeriod = 'mes';
+    let customFrom = null;
+    let customTo   = null;
 
+    /* ══════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════ */
     async function init() {
       const session = await requireAuth();
       if (!session) return;
@@ -143,41 +442,346 @@
       document.getElementById('welcome').textContent =
         `${profile?.full_name || session.user.email} · ${profile?.role || 'user'}`;
       await loadActivities();
+      setupPeriodBar();
     }
 
+    /* ══════════════════════════════════════════
+       CARGAR ACTIVIDADES
+       — Ahora incluye completed_at, created_at, importance
+    ══════════════════════════════════════════ */
     async function loadActivities() {
       const { data, error } = await supabaseClient
         .from('activities')
-        .select('id,title,importance,priority,status,due_date,assigned_to,notes,projects(name),areas(name)')
+        .select('id,title,importance,priority,status,due_date,completed_at,created_at,assigned_to,notes,projects(name),areas(name)')
         .order('due_date', { ascending: true, nullsFirst: false });
       if (error) { alert(error.message); return; }
       activities = data || [];
-      render();
+      renderDashboard();
+      renderTable();
     }
 
-    function render() {
+    /* ══════════════════════════════════════════
+       SELECTOR DE PERÍODO
+    ══════════════════════════════════════════ */
+    function setupPeriodBar() {
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activePeriod = btn.dataset.p;
+          const cr = document.getElementById('customRange');
+          if (activePeriod === 'custom') {
+            cr.classList.add('visible');
+          } else {
+            cr.classList.remove('visible');
+            renderDashboard();
+          }
+        });
+      });
+      document.getElementById('customFrom').addEventListener('change', () => {
+        customFrom = document.getElementById('customFrom').value;
+        if (customFrom && customTo) renderDashboard();
+      });
+      document.getElementById('customTo').addEventListener('change', () => {
+        customTo = document.getElementById('customTo').value;
+        if (customFrom && customTo) renderDashboard();
+      });
+    }
+
+    /* Devuelve las fechas inicio/fin del período activo */
+    function getPeriodRange() {
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
+
+      if (activePeriod === 'hoy') {
+        return { from: today, to: today };
+      }
+      if (activePeriod === 'semana') {
+        const d = new Date(now);
+        d.setDate(d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1)); // lunes
+        return { from: d.toISOString().slice(0, 10), to: today };
+      }
+      if (activePeriod === 'mes') {
+        return { from: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`, to: today };
+      }
+      if (activePeriod === 'anio') {
+        return { from: `${now.getFullYear()}-01-01`, to: today };
+      }
+      if (activePeriod === 'custom') {
+        return { from: customFrom, to: customTo };
+      }
+      return { from: null, to: null }; // todo
+    }
+
+    /* Filtra el array por período usando created_at */
+    function filterByPeriod(arr) {
+      const { from, to } = getPeriodRange();
+      if (!from && !to) return arr;
+      return arr.filter(a => {
+        const d = (a.created_at || '').slice(0, 10);
+        return (!from || d >= from) && (!to || d <= to);
+      });
+    }
+
+    /* ══════════════════════════════════════════
+       RENDER DASHBOARD
+    ══════════════════════════════════════════ */
+    function renderDashboard() {
+      const set = filterByPeriod(activities);
+      const today = new Date().toISOString().slice(0, 10);
+
+      const total    = set.length;
+      const done     = set.filter(a => a.status === 'Terminado').length;
+      const progress = set.filter(a => a.status === 'En proceso').length;
+      const pending  = set.filter(a => a.status === 'No iniciado').length;
+      const overdue  = set.filter(a => a.due_date && a.due_date < today && a.status !== 'Terminado').length;
+      const dueToday = set.filter(a => a.due_date === today && a.status !== 'Terminado').length;
+      const rate     = total ? Math.round(done / total * 100) : 0;
+      const highPri  = set.filter(a => a.priority === 'Alta').length;
+      const highPct  = total ? Math.round(highPri / total * 100) : 0;
+      const donePct  = total ? Math.round(done / total * 100) : 0;
+      const progPct  = total ? Math.round(progress / total * 100) : 0;
+      const pendPct  = total ? Math.round(pending / total * 100) : 0;
+
+      // KPIs
+      v('kTotal', total);
+      v('kTotalSub', activePeriod === 'todo' ? 'en total' : 'en el período');
+      v('kDone', done);
+      v('kDoneSub', `${donePct}% del período`);
+      v('kProgress', progress);
+      v('kProgressSub', `${progPct}% del período`);
+      v('kPending', pending);
+      v('kPendingSub', `${pendPct}% del período`);
+      v('kOverdue', overdue);
+      v('kToday', dueToday);
+      v('kRate', `${rate}%`);
+      v('kHigh', highPri);
+      v('kHighSub', `${highPct}% del período`);
+
+      // Ring estado
+      renderRing(set);
+
+      // Barras prioridad
+      renderGroupBars('priorityBars2', set, 'priority',
+        ['Alta','Media','Baja'],
+        { 'Alta':'#ef4444','Media':'#f59e0b','Baja':'#22c55e' });
+
+      // Barras importancia
+      renderGroupBars('importanceBars', set, 'importance',
+        ['Alta','Media','Baja'],
+        { 'Alta':'#ef4444','Media':'#f59e0b','Baja':'#22c55e' });
+
+      // Proyectos
+      renderTopBars('projectBars', set, a => a.projects?.name || '(Sin proyecto)', '#4d6fe8');
+
+      // Áreas
+      renderTopBars('areaBars', set, a => a.areas?.name || '(Sin área)', '#14b8a6');
+
+      // Asignados
+      renderAssignees(set);
+
+      // Tendencia (siempre usa todos, últimas 8 semanas)
+      renderTrend();
+    }
+
+    /* ── helpers ── */
+    function v(id, val) { document.getElementById(id).textContent = val; }
+
+    function renderRing(set) {
+      const el = document.getElementById('statusRing');
+      const total = set.length;
+      if (!total) { el.innerHTML = '<div class="empty-dash">Sin datos en el período</div>'; return; }
+
+      const groups = [
+        { label: 'Terminado',   color: '#22c55e', val: set.filter(a => a.status==='Terminado').length },
+        { label: 'En proceso',  color: '#4d6fe8', val: set.filter(a => a.status==='En proceso').length },
+        { label: 'No iniciado', color: '#94a3b8', val: set.filter(a => a.status==='No iniciado').length },
+      ];
+
+      // SVG donut
+      const r = 46, cx = 56, cy = 56, stroke = 18;
+      const circ = 2 * Math.PI * r;
+      let offset = 0;
+      let paths = '';
+      const rate = total ? Math.round(groups[0].val / total * 100) : 0;
+
+      groups.forEach(g => {
+        const pct = g.val / total;
+        const dash = pct * circ;
+        paths += `<circle cx="${cx}" cy="${cy}" r="${r}"
+          fill="none" stroke="${g.color}" stroke-width="${stroke}"
+          stroke-dasharray="${dash} ${circ - dash}"
+          stroke-dashoffset="${-offset}"
+          transform="rotate(-90 ${cx} ${cy})" />`;
+        offset += dash;
+      });
+
+      const svg = `<svg class="ring-svg" viewBox="0 0 112 112" width="112" height="112">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f0f2f7" stroke-width="${stroke}"/>
+        ${paths}
+        <text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="14" font-weight="800" fill="#172033">${rate}%</text>
+        <text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="8" fill="#9ca3af">completado</text>
+      </svg>`;
+
+      const legend = groups.map(g => {
+        const pct = total ? Math.round(g.val / total * 100) : 0;
+        return `<div class="ring-item">
+          <span class="ring-dot" style="background:${g.color}"></span>
+          <span class="ring-item-label">${g.label}</span>
+          <span class="ring-item-val">${g.val} <span style="font-weight:400;color:#9ca3af;font-size:11px">${pct}%</span></span>
+        </div>`;
+      }).join('');
+
+      el.innerHTML = `<div class="ring-wrap">${svg}<div class="ring-legend">${legend}</div></div>`;
+    }
+
+    function renderGroupBars(elId, set, field, values, colors) {
+      const el = document.getElementById(elId);
+      const total = set.length;
+      if (!total) { el.innerHTML = '<div class="empty-dash">Sin datos</div>'; return; }
+      el.innerHTML = values.map(v => {
+        const n = set.filter(a => a[field] === v).length;
+        const pct = total ? Math.round(n / total * 100) : 0;
+        return `<div class="bar2-row">
+          <div class="bar2-head"><span>${v}</span><small>${n} · ${pct}%</small></div>
+          <div class="bar2-track"><div class="bar2-fill" style="width:${pct}%;background:${colors[v]}"></div></div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderTopBars(elId, set, keyFn, color) {
+      const el = document.getElementById(elId);
+      if (!set.length) { el.innerHTML = '<div class="empty-dash">Sin datos</div>'; return; }
+      const counts = {};
+      set.forEach(a => {
+        const k = keyFn(a);
+        counts[k] = (counts[k] || 0) + 1;
+      });
+      const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 8);
+      const max = sorted[0]?.[1] || 1;
+      el.innerHTML = sorted.map(([name, n]) => {
+        const pct = Math.round(n / max * 100);
+        const short = name.length > 28 ? name.slice(0,26)+'…' : name;
+        return `<div class="bar2-row">
+          <div class="bar2-head"><span>${short}</span><small>${n}</small></div>
+          <div class="bar2-track"><div class="bar2-fill" style="width:${pct}%;background:${color}"></div></div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderAssignees(set) {
+      const el = document.getElementById('assigneelist');
+      if (!set.length) { el.innerHTML = '<div class="empty-dash">Sin datos</div>'; return; }
+      const people = {};
+      set.forEach(a => {
+        const names = (a.assigned_to || 'Sin asignar').split('/').map(s => s.trim());
+        names.forEach(name => {
+          if (!people[name]) people[name] = { total:0, done:0, progress:0, pending:0 };
+          people[name].total++;
+          if (a.status === 'Terminado') people[name].done++;
+          else if (a.status === 'En proceso') people[name].progress++;
+          else people[name].pending++;
+        });
+      });
+      const sorted = Object.entries(people).sort((a,b) => b[1].total - a[1].total).slice(0,8);
+      el.innerHTML = sorted.map(([name, d]) => {
+        const initials = name.split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+        return `<div class="assignee-row">
+          <div class="assignee-avatar">${initials || '?'}</div>
+          <div style="flex:1;min-width:0">
+            <div class="assignee-name">${name}</div>
+            <div class="mini-pills" style="margin-top:3px">
+              ${d.done     ? `<span class="mini-pill t">✓ ${d.done}</span>` : ''}
+              ${d.progress ? `<span class="mini-pill p">⚙ ${d.progress}</span>` : ''}
+              ${d.pending  ? `<span class="mini-pill n">· ${d.pending}</span>` : ''}
+            </div>
+          </div>
+          <div class="assignee-count">${d.total}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderTrend() {
+      // Últimas 8 semanas usando completed_at
+      const weeks = [];
+      const now = new Date();
+      for (let i = 7; i >= 0; i--) {
+        const end = new Date(now);
+        end.setDate(end.getDate() - i * 7);
+        const start = new Date(end);
+        start.setDate(start.getDate() - 6);
+        const label = `${String(start.getMonth()+1).padStart(2,'0')}/${String(start.getDate()).padStart(2,'0')}`;
+        const from = start.toISOString().slice(0,10);
+        const to   = end.toISOString().slice(0,10);
+        const count = activities.filter(a =>
+          a.status === 'Terminado' && a.completed_at && a.completed_at >= from && a.completed_at <= to
+        ).length;
+        weeks.push({ label, count });
+      }
+
+      const max = Math.max(...weeks.map(w => w.count), 1);
+      const W = 600, H = 130, pad = 20;
+      const stepX = (W - pad*2) / (weeks.length - 1);
+
+      // Puntos
+      const pts = weeks.map((w, i) => {
+        const x = pad + i * stepX;
+        const y = H - pad - ((w.count / max) * (H - pad*2));
+        return { x, y, count: w.count, label: w.label };
+      });
+
+      // Área rellena
+      const pathD = pts.map((p,i) => `${i===0?'M':'L'}${p.x},${p.y}`).join(' ');
+      const areaD = pathD + ` L${pts[pts.length-1].x},${H-pad} L${pts[0].x},${H-pad} Z`;
+
+      // Línea de referencia
+      const avgY = H - pad - ((weeks.reduce((s,w)=>s+w.count,0) / weeks.length / max) * (H - pad*2));
+
+      const svg = document.getElementById('trendSvg');
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4d6fe8" stop-opacity=".18"/>
+            <stop offset="100%" stop-color="#4d6fe8" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- grid lines -->
+        ${[0,1,2,3].map(i => {
+          const y = pad + i * (H-pad*2)/3;
+          return `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="#f0f2f7" stroke-width="1"/>`;
+        }).join('')}
+        <!-- área -->
+        <path d="${areaD}" fill="url(#trendGrad)"/>
+        <!-- línea -->
+        <path d="${pathD}" fill="none" stroke="#4d6fe8" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <!-- puntos -->
+        ${pts.map(p => `
+          <circle cx="${p.x}" cy="${p.y}" r="4" fill="#fff" stroke="#4d6fe8" stroke-width="2"/>
+          ${p.count > 0 ? `<text x="${p.x}" y="${p.y - 10}" text-anchor="middle" font-size="10" fill="#687386" font-weight="700">${p.count}</text>` : ''}
+        `).join('')}
+      `;
+
+      document.getElementById('trendLabels').innerHTML =
+        weeks.map(w => `<span>${w.label}</span>`).join('');
+    }
+
+    /* ══════════════════════════════════════════
+       RENDER TABLA DE ACTIVIDADES (sin cambios)
+    ══════════════════════════════════════════ */
+    function renderTable() {
       const today = new Date().toISOString().slice(0,10);
-      const total = activities.length;
-      const progress = activities.filter(a => a.status === 'En proceso').length;
-      const pending = activities.filter(a => a.status === 'No iniciado').length;
-      const done = activities.filter(a => a.status === 'Terminado').length;
-      const overdue = activities.filter(a => a.due_date && a.due_date < today && a.status !== 'Terminado').length;
-      for (const [id,val] of Object.entries({total,progress,pending,done,overdue}))
-        document.getElementById(id).textContent = val;
-
-      renderBars('statusBars', 'status', ['No iniciado','En proceso','Terminado']);
-      renderBars('priorityBars', 'priority', ['Baja','Media','Alta']);
-
-      const q = document.getElementById('search').value.toLowerCase();
+      const q  = document.getElementById('search').value.toLowerCase();
       const fs = document.getElementById('filterStatus').value;
       const fp = document.getElementById('filterPriority').value;
 
       const filtered = activities.filter(a => {
-        const text = [a.title,a.projects?.name,a.areas?.name,a.assigned_to,a.status].filter(Boolean).join(' ').toLowerCase();
+        const text = [a.title,a.projects?.name,a.areas?.name,a.assigned_to,a.status]
+          .filter(Boolean).join(' ').toLowerCase();
         return text.includes(q) && (!fs || a.status === fs) && (!fp || a.priority === fp);
       });
 
-      const overdueClass = (a) => a.due_date && a.due_date < today && a.status !== 'Terminado' ? 'row-overdue' : '';
+      const overdueClass = (a) =>
+        a.due_date && a.due_date < today && a.status !== 'Terminado' ? 'row-overdue' : '';
 
       document.getElementById('activityTable').innerHTML = filtered.length
         ? filtered.map(a => `
@@ -189,28 +793,19 @@
             <td>${a.due_date || '—'}</td>
             <td>${esc(a.assigned_to || '—')}</td>
             <td class="row-actions">
-              <button class="act-btn edit-btn" onclick="openEdit(${JSON.stringify(a).split('"').join('&quot;')})">✏️</button>
-              <button class="act-btn del-btn" onclick="deleteActivity('${a.id}','${esc(a.title)}')">🗑️</button>
+              <button class="act-btn" onclick="openEdit(${JSON.stringify(a).split('"').join('&quot;')})">✏️</button>
+              <button class="act-btn" onclick="deleteActivity('${a.id}','${esc(a.title)}')">🗑️</button>
             </td>
           </tr>`).join('')
         : '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px">Sin resultados</td></tr>';
     }
 
-    function renderBars(elementId, field, values) {
-      const el = document.getElementById(elementId);
-      const colors = { 'No iniciado':'#94a3b8','En proceso':'#4d6fe8','Terminado':'#22c55e','Baja':'#22c55e','Media':'#f59e0b','Alta':'#ef4444' };
-      el.innerHTML = values.map(v => {
-        const n = activities.filter(a => a[field] === v).length;
-        const pct = activities.length ? Math.round(n / activities.length * 100) : 0;
-        return `<div class="bar-row"><div><span>${v}</span><b>${n}</b></div>
-          <div class="bar"><i style="width:${pct}%;background:${colors[v]}"></i></div></div>`;
-      }).join('');
-    }
-
     ['search','filterStatus','filterPriority'].forEach(id =>
-      document.getElementById(id).addEventListener('input', render));
+      document.getElementById(id).addEventListener('input', renderTable));
 
-    // Guardar nueva
+    /* ══════════════════════════════════════════
+       GUARDAR NUEVA (sin cambios)
+    ══════════════════════════════════════════ */
     document.getElementById('activityForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = document.getElementById('formMsg');
@@ -218,19 +813,21 @@
       msg.textContent = 'Guardando…'; btn.disabled = true;
 
       const projectId = await upsertRelation('projects', document.getElementById('project').value.trim());
-      const areaId = await upsertRelation('areas', document.getElementById('area').value.trim());
-      if (projectId === false || areaId === false) { msg.textContent = 'Error al guardar relación.'; btn.disabled = false; return; }
-
+      const areaId    = await upsertRelation('areas',    document.getElementById('area').value.trim());
+      if (projectId === false || areaId === false) {
+        msg.textContent = 'Error al guardar relación.'; btn.disabled = false; return;
+      }
       const status = document.getElementById('status').value;
       const { error } = await supabaseClient.from('activities').insert({
-        title: document.getElementById('activityTitle').value.trim(),
-        project_id: projectId, area_id: areaId,
+        title:       document.getElementById('activityTitle').value.trim(),
+        project_id:  projectId, area_id: areaId,
         assigned_to: document.getElementById('assigned').value.trim() || null,
-        importance: document.getElementById('importance').value,
-        priority: document.getElementById('priority').value,
-        status, due_date: document.getElementById('due').value || null,
+        importance:  document.getElementById('importance').value,
+        priority:    document.getElementById('priority').value,
+        status,
+        due_date:    document.getElementById('due').value || null,
         completed_at: status === 'Terminado' ? new Date().toISOString().slice(0,10) : null,
-        notes: document.getElementById('notes').value.trim() || null
+        notes:       document.getElementById('notes').value.trim() || null
       });
       btn.disabled = false;
       if (error) { msg.textContent = error.message; return; }
@@ -238,53 +835,55 @@
       await loadActivities();
     });
 
-    // Editar
+    /* ══════════════════════════════════════════
+       EDITAR (sin cambios)
+    ══════════════════════════════════════════ */
     function openEdit(a) {
-      document.getElementById('editId').value = a.id;
-      document.getElementById('eTitle').value = a.title;
-      document.getElementById('eProject').value = a.projects?.name || '';
-      document.getElementById('eArea').value = a.areas?.name || '';
+      document.getElementById('editId').value    = a.id;
+      document.getElementById('eTitle').value    = a.title;
+      document.getElementById('eProject').value  = a.projects?.name || '';
+      document.getElementById('eArea').value     = a.areas?.name || '';
       document.getElementById('eAssigned').value = a.assigned_to || '';
       document.getElementById('eImportance').value = a.importance;
       document.getElementById('ePriority').value = a.priority;
-      document.getElementById('eStatus').value = a.status;
-      document.getElementById('eDue').value = a.due_date || '';
-      document.getElementById('eNotes').value = a.notes || '';
+      document.getElementById('eStatus').value   = a.status;
+      document.getElementById('eDue').value      = a.due_date || '';
+      document.getElementById('eNotes').value    = a.notes || '';
       document.getElementById('editMsg').textContent = '';
       document.getElementById('editModal').style.display = 'flex';
     }
-
     function closeModal() { document.getElementById('editModal').style.display = 'none'; }
-    document.getElementById('editModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
-
+    document.getElementById('editModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
     document.getElementById('editForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = document.getElementById('editMsg');
       const btn = e.target.querySelector('button');
       msg.textContent = 'Guardando…'; btn.disabled = true;
-
       const id = document.getElementById('editId').value;
       const projectId = await upsertRelation('projects', document.getElementById('eProject').value.trim());
-      const areaId = await upsertRelation('areas', document.getElementById('eArea').value.trim());
-
+      const areaId    = await upsertRelation('areas',    document.getElementById('eArea').value.trim());
       const status = document.getElementById('eStatus').value;
       const { error } = await supabaseClient.from('activities').update({
-        title: document.getElementById('eTitle').value.trim(),
-        project_id: projectId || null, area_id: areaId || null,
+        title:       document.getElementById('eTitle').value.trim(),
+        project_id:  projectId || null, area_id: areaId || null,
         assigned_to: document.getElementById('eAssigned').value.trim() || null,
-        importance: document.getElementById('eImportance').value,
-        priority: document.getElementById('ePriority').value,
-        status, due_date: document.getElementById('eDue').value || null,
+        importance:  document.getElementById('eImportance').value,
+        priority:    document.getElementById('ePriority').value,
+        status,
+        due_date:    document.getElementById('eDue').value || null,
         completed_at: status === 'Terminado' ? new Date().toISOString().slice(0,10) : null,
-        notes: document.getElementById('eNotes').value.trim() || null
+        notes:       document.getElementById('eNotes').value.trim() || null
       }).eq('id', id);
-
       btn.disabled = false;
       if (error) { msg.textContent = error.message; return; }
       closeModal(); await loadActivities();
     });
 
-    // Eliminar
+    /* ══════════════════════════════════════════
+       ELIMINAR (sin cambios)
+    ══════════════════════════════════════════ */
     async function deleteActivity(id, title) {
       if (!confirm(`¿Eliminar "${title}"?`)) return;
       const { error } = await supabaseClient.from('activities').delete().eq('id', id);
@@ -292,7 +891,9 @@
       await loadActivities();
     }
 
-    // Upsert helper
+    /* ══════════════════════════════════════════
+       UPSERT HELPER (sin cambios)
+    ══════════════════════════════════════════ */
     async function upsertRelation(table, name) {
       if (!name) return null;
       let r = await supabaseClient.from(table).select('id').eq('name', name).maybeSingle();
@@ -302,26 +903,34 @@
       return ins.data.id;
     }
 
-    // Export CSV
+    /* ══════════════════════════════════════════
+       EXPORT CSV (sin cambios)
+    ══════════════════════════════════════════ */
     function exportCSV() {
       const headers = ['Actividad','Proyecto','Área','Prioridad','Estado','Entrega','Asignado','Notas'];
       const rows = activities.map(a => [
         a.title, a.projects?.name||'', a.areas?.name||'',
-        a.priority, a.status, a.due_date||'', a.assigned_to||'', (a.notes||'').replace(/\n/g,' ')
+        a.priority, a.status, a.due_date||'', a.assigned_to||'',
+        (a.notes||'').replace(/\n/g,' ')
       ]);
-      const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const csv = [headers, ...rows]
+        .map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
       const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob); a.download = `actividades-${new Date().toISOString().slice(0,10)}.csv`;
+      a.href = URL.createObjectURL(blob);
+      a.download = `actividades-${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
     }
 
-    document.getElementById('logout').addEventListener('click', signOut);
-
+    /* ══════════════════════════════════════════
+       UTILS
+    ══════════════════════════════════════════ */
     function esc(s) {
-      return String(s ?? '').replace(/[&<>"']/g, c =>
-        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+      return String(s ?? '').replace(/[&<>"']/g,
+        c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
     }
+
+    document.getElementById('logout').addEventListener('click', signOut);
 
     init();
   </script>
