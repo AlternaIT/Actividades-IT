@@ -829,6 +829,23 @@
     let euIsActive  = true;   // estado del toggle en modal editar
 
     /* ══════════════════════════════════════════
+       NORMALIZAR ROL (BD → App)
+       La BD acepta: 'admin', 'manager', 'user'
+       La app usa:   'Admin', 'Supervisor', 'Técnico', 'Consulta'
+    ══════════════════════════════════════════ */
+    function normalizeRole(rawRole) {
+      if (!rawRole) return 'Admin'; // fallback sin perfil
+      const r = String(rawRole).toLowerCase().trim();
+      if (r === 'admin' || r === 'administrator') return 'Admin';
+      if (r === 'manager' || r === 'supervisor' || r === 'gestor') return 'Supervisor';
+      if (r === 'tecnico' || r === 'técnico' || r === 'technician') return 'Técnico';
+      if (r === 'consulta' || r === 'viewer' || r === 'readonly' || r === 'read-only') return 'Consulta';
+      // 'user' u otro valor desconocido → Técnico (rol más restrictivo por defecto)
+      console.warn(`[GestionTI] Rol desconocido en BD: "${rawRole}" → se asigna 'Técnico'`);
+      return 'Técnico';
+    }
+
+    /* ══════════════════════════════════════════
        INIT
     ══════════════════════════════════════════ */
     async function init() {
@@ -840,7 +857,7 @@
       // corriendo migration.sql; mientras tanto la query no falla.
       const { data: profile, error: profileError } = await supabaseClient
         .from('profiles')
-        .select('id,full_name,role')
+        .select('id,full_name,role,area,is_active')
         .eq('id', session.user.id)
         .maybeSingle();
 
@@ -853,7 +870,7 @@
         id:        session.user.id,
         email:     session.user.email,
         full_name: profile?.full_name || session.user.email,
-        role:      profile?.role      || 'Admin',   // fallback seguro mientras no hay perfil
+        role:      roleFromDB ? normalizeRole(profile.role) : 'Admin',  // mapea 'admin'→'Admin', 'manager'→'Supervisor', etc.
         roleFromDB,                                  // flag que usa loadActivities
         area:      profile?.area      || '',
         is_active: profile?.is_active ?? true,
@@ -1427,7 +1444,8 @@
         .select('id,full_name,email,role,area,is_active,last_seen')
         .order('full_name');
       if (error) { console.error(error); return; }
-      allUsers = data || [];
+      // Normalizar roles BD → App para mostrar correctamente en la UI
+      allUsers = (data || []).map(u => ({ ...u, role: normalizeRole(u.role) }));
       renderUserKpis();
       renderUsers();
     }
@@ -1537,12 +1555,12 @@
         msg.textContent = '✕ ' + authErr.message; return;
       }
 
-      // Insertar/actualizar en profiles
+      // Insertar/actualizar en profiles (guardamos el rol en formato BD)
       const userId = authData?.user?.id;
       if (userId) {
         await supabaseClient.from('profiles').upsert({
           id: userId, full_name: name, email,
-          role, area: area || null, is_active: isActive
+          role: denormalizeRole(role), area: area || null, is_active: isActive
         });
       }
 
@@ -1589,7 +1607,7 @@
       const area = document.getElementById('euArea').value.trim();
 
       const { error } = await supabaseClient.from('profiles').update({
-        full_name: name, role, area: area || null, is_active: euIsActive
+        full_name: name, role: denormalizeRole(role), area: area || null, is_active: euIsActive
       }).eq('id', id);
 
       btn.disabled = false;
@@ -1832,12 +1850,20 @@
       }).join('');
     }
 
+    /* Convierte rol de la app ('Admin','Supervisor','Técnico','Consulta')
+       al valor que acepta el constraint de la BD ('admin','manager','user') */
+    function denormalizeRole(appRole) {
+      const map = { 'Admin':'admin', 'Supervisor':'manager', 'Técnico':'user', 'Consulta':'user' };
+      return map[appRole] || 'user';
+    }
+
     async function applyRoleChange(userId, name) {
       const sel = document.getElementById('rolesel-' + userId);
       if (!sel) return;
-      const newRole = sel.value;
+      const newRole = sel.value;          // valor de la app: 'Admin', 'Supervisor', etc.
+      const dbRole  = denormalizeRole(newRole); // valor para la BD: 'admin', 'manager', 'user'
       if (!confirm(`¿Cambiar rol de ${name} a "${newRole}"?`)) return;
-      const { error } = await supabaseClient.from('profiles').update({ role: newRole }).eq('id', userId);
+      const { error } = await supabaseClient.from('profiles').update({ role: dbRole }).eq('id', userId);
       if (error) { alert('Error: ' + error.message); return; }
       await loadUsers();
       renderConfigUsers();
