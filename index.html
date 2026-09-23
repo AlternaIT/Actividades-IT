@@ -1,1 +1,42 @@
-
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestión TI — Login</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <div class="brand">GESTIÓN <span>TI</span></div>
+    <p class="muted">Control de actividades y proyectos</p>
+    <form id="loginForm">
+      <label>Correo
+        <input id="email" type="email" required autocomplete="email" placeholder="correo@empresa.com">
+      </label>
+      <label>Contraseña
+        <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+      </label>
+      <button class="primary" type="submit">Iniciar sesión</button>
+      <p id="error" class="error"></p>
+    </form>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    const form = document.getElementById('loginForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const error = document.getElementById('error');
+      error.textContent = '';
+      const { error: authError } = await supabaseClient.auth.signInWithPassword({
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+      });
+      if (authError) { error.textContent = authError.message; return; }
+      location.href = 'dashboard.html';
+    });
+  </script>
+</body>
+</html>
