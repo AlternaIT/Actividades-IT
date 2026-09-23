@@ -7,11 +7,42 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <!-- MODAL EDITAR -->
+  <div id="editModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <div class="modal-head"><h3>Editar actividad</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+      <form id="editForm" class="form-grid">
+        <input type="hidden" id="editId">
+        <label>Actividad<input id="eTitle" required></label>
+        <label>Proyecto<input id="eProject"></label>
+        <label>Área<input id="eArea"></label>
+        <label>Asignado<input id="eAssigned"></label>
+        <label>Importancia<select id="eImportance"><option>Baja</option><option>Media</option><option>Alta</option></select></label>
+        <label>Prioridad<select id="ePriority"><option>Baja</option><option>Media</option><option>Alta</option></select></label>
+        <label>Estado<select id="eStatus"><option>No iniciado</option><option>En proceso</option><option>Terminado</option></select></label>
+        <label>Fecha de entrega<input id="eDue" type="date"></label>
+        <label class="wide">Notas<textarea id="eNotes"></textarea></label>
+        <button class="primary wide" type="submit">Guardar cambios</button>
+        <p id="editMsg" class="muted wide"></p>
+      </form>
+    </div>
+  </div>
+
   <aside class="sidebar">
-    <div class="brand">GESTIÓN <span>TI</span></div>
+    <img class="sidebar-logo" src="data:image/png;base64,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" alt="alterna">
     <nav>
-      <a class="active" href="dashboard.html">Dashboard</a>
-      <a href="#actividades">Actividades</a>
+      <a class="active" href="dashboard.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a href="#actividades">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Actividades
+      </a>
+      <a href="#nueva">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Nueva
+      </a>
     </nav>
     <button id="logout" class="ghost">Cerrar sesión</button>
   </aside>
@@ -22,7 +53,13 @@
         <h1>Dashboard</h1>
         <p class="muted" id="welcome">Cargando...</p>
       </div>
-      <button class="primary" onclick="document.getElementById('activityTitle').focus()">+ Nueva actividad</button>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn-outline" onclick="exportCSV()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar CSV
+        </button>
+        <a href="#nueva" class="primary btn-new">+ Nueva actividad</a>
+      </div>
     </header>
 
     <section class="cards">
@@ -35,40 +72,51 @@
 
     <section class="grid">
       <article class="panel">
-        <div class="panel-head"><h2>Actividades por estado</h2></div>
+        <div class="panel-head"><h2>Por estado</h2></div>
         <div id="statusBars"></div>
       </article>
       <article class="panel">
-        <div class="panel-head"><h2>Prioridades</h2></div>
+        <div class="panel-head"><h2>Por prioridad</h2></div>
         <div id="priorityBars"></div>
       </article>
     </section>
 
     <section class="panel" id="actividades">
       <div class="panel-head">
-        <div>
-          <h2>Actividades</h2>
-          <p class="muted">Fuente: Supabase</p>
+        <h2>Actividades</h2>
+        <div class="filters">
+          <input id="search" class="search" placeholder="Buscar…">
+          <select id="filterStatus" class="search" style="width:auto">
+            <option value="">Estado</option>
+            <option>No iniciado</option>
+            <option>En proceso</option>
+            <option>Terminado</option>
+          </select>
+          <select id="filterPriority" class="search" style="width:auto">
+            <option value="">Prioridad</option>
+            <option>Baja</option>
+            <option>Media</option>
+            <option>Alta</option>
+          </select>
         </div>
-        <input id="search" class="search" placeholder="Buscar actividad...">
       </div>
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Actividad</th><th>Proyecto</th><th>Prioridad</th><th>Estado</th><th>Entrega</th><th>Asignado</th>
+            <th>Actividad</th><th>Proyecto</th><th>Prioridad</th><th>Estado</th><th>Entrega</th><th>Asignado</th><th></th>
           </tr></thead>
           <tbody id="activityTable"></tbody>
         </table>
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="nueva">
       <div class="panel-head"><h2>Nueva actividad</h2></div>
       <form id="activityForm" class="form-grid">
         <label>Actividad<input id="activityTitle" required></label>
-        <label>Proyecto<input id="project" required placeholder="Ej. Gestión TI"></label>
+        <label>Proyecto<input id="project" placeholder="Ej. Gestión TI"></label>
         <label>Área<input id="area" placeholder="Ej. TI"></label>
-        <label>Asignado<input id="assigned" placeholder="Hector"></label>
+        <label>Asignado<input id="assigned" placeholder="Nombre"></label>
         <label>Importancia<select id="importance"><option>Baja</option><option selected>Media</option><option>Alta</option></select></label>
         <label>Prioridad<select id="priority"><option>Baja</option><option selected>Media</option><option>Alta</option></select></label>
         <label>Estado<select id="status"><option>No iniciado</option><option>En proceso</option><option>Terminado</option></select></label>
@@ -90,26 +138,19 @@
     async function init() {
       const session = await requireAuth();
       if (!session) return;
-
       const { data: profile } = await supabaseClient
         .from('profiles').select('full_name,role').eq('id', session.user.id).maybeSingle();
-
       document.getElementById('welcome').textContent =
-        `Sesión: ${profile?.full_name || session.user.email} · ${profile?.role || 'user'}`;
-
+        `${profile?.full_name || session.user.email} · ${profile?.role || 'user'}`;
       await loadActivities();
     }
 
     async function loadActivities() {
       const { data, error } = await supabaseClient
         .from('activities')
-        .select('id,title,importance,priority,status,due_date,assigned_to,projects(name),areas(name)')
+        .select('id,title,importance,priority,status,due_date,assigned_to,notes,projects(name),areas(name)')
         .order('due_date', { ascending: true, nullsFirst: false });
-
-      if (error) {
-        alert(error.message);
-        return;
-      }
+      if (error) { alert(error.message); return; }
       activities = data || [];
       render();
     }
@@ -121,98 +162,165 @@
       const pending = activities.filter(a => a.status === 'No iniciado').length;
       const done = activities.filter(a => a.status === 'Terminado').length;
       const overdue = activities.filter(a => a.due_date && a.due_date < today && a.status !== 'Terminado').length;
-
       for (const [id,val] of Object.entries({total,progress,pending,done,overdue}))
         document.getElementById(id).textContent = val;
 
-      renderBars('statusBars', ['No iniciado','En proceso','Terminado']);
-      renderBars('priorityBars', ['Baja','Media','Alta']);
+      renderBars('statusBars', 'status', ['No iniciado','En proceso','Terminado']);
+      renderBars('priorityBars', 'priority', ['Baja','Media','Alta']);
 
       const q = document.getElementById('search').value.toLowerCase();
-      const filtered = activities.filter(a =>
-        [a.title,a.projects?.name,a.areas?.name,a.assigned_to,a.status].filter(Boolean)
-        .join(' ').toLowerCase().includes(q)
-      );
+      const fs = document.getElementById('filterStatus').value;
+      const fp = document.getElementById('filterPriority').value;
 
-      document.getElementById('activityTable').innerHTML = filtered.map(a => `
-        <tr>
-          <td><strong>${escapeHtml(a.title)}</strong></td>
-          <td>${escapeHtml(a.projects?.name || '—')}</td>
-          <td><span class="pill ${a.priority.toLowerCase()}">${a.priority}</span></td>
-          <td><span class="pill">${a.status}</span></td>
-          <td>${a.due_date || '—'}</td>
-          <td>${escapeHtml(a.assigned_to || '—')}</td>
-        </tr>`).join('');
+      const filtered = activities.filter(a => {
+        const text = [a.title,a.projects?.name,a.areas?.name,a.assigned_to,a.status].filter(Boolean).join(' ').toLowerCase();
+        return text.includes(q) && (!fs || a.status === fs) && (!fp || a.priority === fp);
+      });
+
+      const overdueClass = (a) => a.due_date && a.due_date < today && a.status !== 'Terminado' ? 'row-overdue' : '';
+
+      document.getElementById('activityTable').innerHTML = filtered.length
+        ? filtered.map(a => `
+          <tr class="${overdueClass(a)}">
+            <td><strong>${esc(a.title)}</strong>${a.notes ? `<br><small class="note-preview">${esc(a.notes.slice(0,60))}${a.notes.length>60?'…':''}</small>` : ''}</td>
+            <td>${esc(a.projects?.name || '—')}</td>
+            <td><span class="pill ${a.priority.toLowerCase()}">${a.priority}</span></td>
+            <td><span class="pill status-${a.status.replace(/\s+/g,'-').toLowerCase()}">${a.status}</span></td>
+            <td>${a.due_date || '—'}</td>
+            <td>${esc(a.assigned_to || '—')}</td>
+            <td class="row-actions">
+              <button class="act-btn edit-btn" onclick="openEdit(${JSON.stringify(a).split('"').join('&quot;')})">✏️</button>
+              <button class="act-btn del-btn" onclick="deleteActivity('${a.id}','${esc(a.title)}')">🗑️</button>
+            </td>
+          </tr>`).join('')
+        : '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px">Sin resultados</td></tr>';
     }
 
-    function renderBars(elementId, values) {
+    function renderBars(elementId, field, values) {
       const el = document.getElementById(elementId);
+      const colors = { 'No iniciado':'#94a3b8','En proceso':'#4d6fe8','Terminado':'#22c55e','Baja':'#22c55e','Media':'#f59e0b','Alta':'#ef4444' };
       el.innerHTML = values.map(v => {
-        const n = activities.filter(a => a[elementId === 'statusBars' ? 'status' : 'priority'] === v).length;
+        const n = activities.filter(a => a[field] === v).length;
         const pct = activities.length ? Math.round(n / activities.length * 100) : 0;
         return `<div class="bar-row"><div><span>${v}</span><b>${n}</b></div>
-          <div class="bar"><i style="width:${pct}%"></i></div></div>`;
+          <div class="bar"><i style="width:${pct}%;background:${colors[v]}"></i></div></div>`;
       }).join('');
     }
 
-    document.getElementById('search').addEventListener('input', render);
+    ['search','filterStatus','filterPriority'].forEach(id =>
+      document.getElementById(id).addEventListener('input', render));
 
+    // Guardar nueva
     document.getElementById('activityForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = document.getElementById('formMsg');
-      msg.textContent = 'Guardando...';
+      const btn = e.target.querySelector('button');
+      msg.textContent = 'Guardando…'; btn.disabled = true;
 
-      const projectName = document.getElementById('project').value.trim();
-      const areaName = document.getElementById('area').value.trim();
-
-      let projectId = null, areaId = null;
-
-      if (projectName) {
-        let r = await supabaseClient.from('projects').select('id').eq('name', projectName).maybeSingle();
-        if (!r.data) {
-          const ins = await supabaseClient.from('projects').insert({name: projectName}).select('id').single();
-          if (ins.error) { msg.textContent = ins.error.message; return; }
-          projectId = ins.data.id;
-        } else projectId = r.data.id;
-      }
-
-      if (areaName) {
-        let r = await supabaseClient.from('areas').select('id').eq('name', areaName).maybeSingle();
-        if (!r.data) {
-          const ins = await supabaseClient.from('areas').insert({name: areaName}).select('id').single();
-          if (ins.error) { msg.textContent = ins.error.message; return; }
-          areaId = ins.data.id;
-        } else areaId = r.data.id;
-      }
+      const projectId = await upsertRelation('projects', document.getElementById('project').value.trim());
+      const areaId = await upsertRelation('areas', document.getElementById('area').value.trim());
+      if (projectId === false || areaId === false) { msg.textContent = 'Error al guardar relación.'; btn.disabled = false; return; }
 
       const status = document.getElementById('status').value;
-      const payload = {
+      const { error } = await supabaseClient.from('activities').insert({
         title: document.getElementById('activityTitle').value.trim(),
-        project_id: projectId,
-        area_id: areaId,
+        project_id: projectId, area_id: areaId,
         assigned_to: document.getElementById('assigned').value.trim() || null,
         importance: document.getElementById('importance').value,
         priority: document.getElementById('priority').value,
-        status,
-        due_date: document.getElementById('due').value || null,
+        status, due_date: document.getElementById('due').value || null,
         completed_at: status === 'Terminado' ? new Date().toISOString().slice(0,10) : null,
         notes: document.getElementById('notes').value.trim() || null
-      };
-
-      const { error } = await supabaseClient.from('activities').insert(payload);
+      });
+      btn.disabled = false;
       if (error) { msg.textContent = error.message; return; }
-
-      e.target.reset();
-      msg.textContent = 'Actividad guardada.';
+      e.target.reset(); msg.textContent = '✓ Actividad guardada.';
       await loadActivities();
     });
 
+    // Editar
+    function openEdit(a) {
+      document.getElementById('editId').value = a.id;
+      document.getElementById('eTitle').value = a.title;
+      document.getElementById('eProject').value = a.projects?.name || '';
+      document.getElementById('eArea').value = a.areas?.name || '';
+      document.getElementById('eAssigned').value = a.assigned_to || '';
+      document.getElementById('eImportance').value = a.importance;
+      document.getElementById('ePriority').value = a.priority;
+      document.getElementById('eStatus').value = a.status;
+      document.getElementById('eDue').value = a.due_date || '';
+      document.getElementById('eNotes').value = a.notes || '';
+      document.getElementById('editMsg').textContent = '';
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+    document.getElementById('editModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('editMsg');
+      const btn = e.target.querySelector('button');
+      msg.textContent = 'Guardando…'; btn.disabled = true;
+
+      const id = document.getElementById('editId').value;
+      const projectId = await upsertRelation('projects', document.getElementById('eProject').value.trim());
+      const areaId = await upsertRelation('areas', document.getElementById('eArea').value.trim());
+
+      const status = document.getElementById('eStatus').value;
+      const { error } = await supabaseClient.from('activities').update({
+        title: document.getElementById('eTitle').value.trim(),
+        project_id: projectId || null, area_id: areaId || null,
+        assigned_to: document.getElementById('eAssigned').value.trim() || null,
+        importance: document.getElementById('eImportance').value,
+        priority: document.getElementById('ePriority').value,
+        status, due_date: document.getElementById('eDue').value || null,
+        completed_at: status === 'Terminado' ? new Date().toISOString().slice(0,10) : null,
+        notes: document.getElementById('eNotes').value.trim() || null
+      }).eq('id', id);
+
+      btn.disabled = false;
+      if (error) { msg.textContent = error.message; return; }
+      closeModal(); await loadActivities();
+    });
+
+    // Eliminar
+    async function deleteActivity(id, title) {
+      if (!confirm(`¿Eliminar "${title}"?`)) return;
+      const { error } = await supabaseClient.from('activities').delete().eq('id', id);
+      if (error) { alert(error.message); return; }
+      await loadActivities();
+    }
+
+    // Upsert helper
+    async function upsertRelation(table, name) {
+      if (!name) return null;
+      let r = await supabaseClient.from(table).select('id').eq('name', name).maybeSingle();
+      if (r.data) return r.data.id;
+      const ins = await supabaseClient.from(table).insert({name}).select('id').single();
+      if (ins.error) return false;
+      return ins.data.id;
+    }
+
+    // Export CSV
+    function exportCSV() {
+      const headers = ['Actividad','Proyecto','Área','Prioridad','Estado','Entrega','Asignado','Notas'];
+      const rows = activities.map(a => [
+        a.title, a.projects?.name||'', a.areas?.name||'',
+        a.priority, a.status, a.due_date||'', a.assigned_to||'', (a.notes||'').replace(/\n/g,' ')
+      ]);
+      const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = `actividades-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+    }
+
     document.getElementById('logout').addEventListener('click', signOut);
 
-    function escapeHtml(s) {
-      return String(s ?? '').replace(/[&<>"']/g, c => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
-      }[c]));
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
     }
 
     init();
