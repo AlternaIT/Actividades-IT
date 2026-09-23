@@ -349,6 +349,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Usuarios
       </a>
+      <a href="#" data-view="configuracion" id="navConfig" class="nav-hidden">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Configuración
+      </a>
     </nav>
     <button id="logout" class="ghost">Cerrar sesión</button>
   </aside>
@@ -679,6 +683,132 @@
 
     </div><!-- /view-usuarios -->
 
+    <!-- ══════════ VISTA: CONFIGURACIÓN ══════════ -->
+    <div id="view-configuracion" class="spa-view" style="display:none">
+
+      <header class="topbar" style="margin-bottom:20px">
+        <div>
+          <h1 style="margin:0 0 2px;font-size:22px">Configuración</h1>
+          <p class="muted" style="margin:0;font-size:13px">Permisos, roles y ajustes del sistema</p>
+        </div>
+      </header>
+
+      <!-- ─── Matriz de permisos editable ─── -->
+      <div class="panel-dash" style="margin-bottom:18px">
+        <p class="panel-title"><span>🔐</span> Permisos por rol
+          <small>Solo Admin puede modificar</small>
+        </p>
+
+        <style>
+          .perm-grid { display:grid; grid-template-columns: 200px repeat(4,1fr); gap:0; border:1px solid #e6eaf0; border-radius:10px; overflow:hidden; font-size:13px; }
+          .perm-grid > div { padding:10px 14px; border-bottom:1px solid #f0f2f7; display:flex; align-items:center; }
+          .perm-grid > div:nth-child(-n+5) { background:#f8fafc; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:#687386; }
+          .perm-grid > div:nth-last-child(-n+5) { border-bottom:none; }
+          .perm-section { background:#f8fafc !important; color:#344054 !important; font-weight:700 !important; font-size:11px !important; grid-column:1/-1; border-bottom:1px solid #e6eaf0 !important; padding:8px 14px !important; letter-spacing:.3px; }
+          .perm-toggle { width:36px; height:20px; border-radius:999px; border:none; cursor:pointer; position:relative; transition:background .2s; flex-shrink:0; }
+          .perm-toggle.on  { background:#22c55e; }
+          .perm-toggle.off { background:#d1d5db; }
+          .perm-toggle.locked { opacity:.4; cursor:not-allowed; }
+          .perm-toggle::after { content:''; position:absolute; top:3px; width:14px; height:14px; border-radius:50%; background:#fff; transition:left .2s; }
+          .perm-toggle.on::after  { left:19px; }
+          .perm-toggle.off::after { left:3px; }
+          .perm-label { margin-left:8px; color:#344054; }
+          @media(max-width:700px){ .perm-grid{ grid-template-columns:140px repeat(4,1fr); font-size:11px; } }
+        </style>
+
+        <div class="perm-grid" id="permGrid">
+          <!-- headers -->
+          <div>Permiso</div>
+          <div><span class="role-badge role-admin">Admin</span></div>
+          <div><span class="role-badge role-supervisor">Supervisor</span></div>
+          <div><span class="role-badge role-tecnico">Técnico</span></div>
+          <div><span class="role-badge role-consulta">Consulta</span></div>
+          <!-- rows rendered by JS -->
+        </div>
+
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="primary" id="savePermsBtn" onclick="savePermissions()">Guardar permisos</button>
+          <button class="ghost" onclick="resetPermissions()">Restablecer predeterminados</button>
+          <span id="permMsg" style="font-size:12px;color:#687386"></span>
+        </div>
+      </div>
+
+      <!-- ─── Gestión de roles (acceso rápido a usuarios) ─── -->
+      <div class="db-grid-2" style="margin-bottom:18px">
+
+        <!-- Descripción de roles -->
+        <div class="panel-dash">
+          <p class="panel-title"><span>👤</span> Descripción de roles</p>
+          <div style="display:grid;gap:12px;font-size:13px">
+            <div style="padding:12px;background:#fdf2f8;border-radius:10px">
+              <strong style="color:#9d174d">Admin</strong>
+              <p style="margin:4px 0 0;color:#687386;font-size:12px">Acceso total al sistema. Puede crear/desactivar usuarios, cambiar roles y modificar configuración.</p>
+            </div>
+            <div style="padding:12px;background:#f5f3ff;border-radius:10px">
+              <strong style="color:#5b21b6">Supervisor</strong>
+              <p style="margin:4px 0 0;color:#687386;font-size:12px">Puede ver y gestionar todas las actividades y ver el directorio de usuarios. No puede crear ni desactivar usuarios.</p>
+            </div>
+            <div style="padding:12px;background:#eff6ff;border-radius:10px">
+              <strong style="color:#1e40af">Técnico</strong>
+              <p style="margin:4px 0 0;color:#687386;font-size:12px">Ve y edita únicamente sus propias actividades. Sin acceso a usuarios ni configuración.</p>
+            </div>
+            <div style="padding:12px;background:#f9fafb;border-radius:10px">
+              <strong style="color:#374151">Consulta</strong>
+              <p style="margin:4px 0 0;color:#687386;font-size:12px">Solo lectura. Puede ver actividades y dashboard pero no crear ni editar nada.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cambio rápido de rol -->
+        <div class="panel-dash">
+          <p class="panel-title"><span>⚡</span> Cambio rápido de rol</p>
+          <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <input id="configUserSearch" class="search" placeholder="Buscar usuario…" style="flex:1;min-width:140px" oninput="renderConfigUsers()">
+            <select id="configRoleFilter" class="search" style="width:auto" onchange="renderConfigUsers()">
+              <option value="">Todos</option>
+              <option>Admin</option><option>Supervisor</option>
+              <option>Técnico</option><option>Consulta</option>
+            </select>
+          </div>
+          <div style="max-height:280px;overflow-y:auto">
+            <table style="width:100%;font-size:12px;border-collapse:collapse">
+              <thead><tr style="background:#f8fafc">
+                <th style="padding:6px 10px;text-align:left;font-weight:700;color:#687386;font-size:11px">Usuario</th>
+                <th style="padding:6px 10px;text-align:left;font-weight:700;color:#687386;font-size:11px">Rol actual</th>
+                <th style="padding:6px 10px;text-align:left;font-weight:700;color:#687386;font-size:11px">Cambiar a</th>
+              </tr></thead>
+              <tbody id="configUserTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ─── Información del sistema ─── -->
+      <div class="panel-dash">
+        <p class="panel-title"><span>ℹ️</span> Estado del sistema</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;font-size:13px">
+          <div style="padding:14px;background:#f8fafc;border-radius:10px">
+            <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:6px">Supabase URL</div>
+            <code style="font-size:11px;color:#344054;word-break:break-all" id="cfgUrl">—</code>
+          </div>
+          <div style="padding:14px;background:#f8fafc;border-radius:10px">
+            <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:6px">Usuario activo</div>
+            <div style="color:#344054" id="cfgUser">—</div>
+          </div>
+          <div style="padding:14px;background:#f8fafc;border-radius:10px">
+            <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:6px">Rol</div>
+            <div id="cfgRole">—</div>
+          </div>
+          <div style="padding:14px;background:#f8fafc;border-radius:10px">
+            <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:6px">Sesión iniciada</div>
+            <div style="color:#344054" id="cfgSince">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /view-configuracion -->
+
   </main>
 
   <!-- ═══════════════ SCRIPTS ═══════════════ -->
@@ -749,10 +879,16 @@
     function applyRoleRestrictions() {
       const role = currentUser?.role || 'Técnico';
 
-      // Nav: Usuarios solo para Admin y Supervisor (vista solo lectura para Supervisor)
+      // Nav: Usuarios para Admin y Supervisor
       const navU = document.getElementById('navUsuarios');
       if (role === 'Admin' || role === 'Supervisor') {
         navU.classList.remove('nav-hidden');
+      }
+
+      // Nav: Configuración solo para Admin
+      const navCfg = document.getElementById('navConfig');
+      if (role === 'Admin') {
+        navCfg.classList.remove('nav-hidden');
       }
 
       // Nav: "Nueva" oculta para Consulta
@@ -1517,7 +1653,10 @@
        ROUTER SPA — muestra una vista a la vez
     ══════════════════════════════════════════ */
     function showView(name) {
-      const views = ['dashboard', 'actividades', 'nueva', 'usuarios'];
+      // Guardia: Configuración solo para Admin
+      if (name === 'configuracion' && currentUser?.role !== 'Admin') return;
+
+      const views = ['dashboard', 'actividades', 'nueva', 'usuarios', 'configuracion'];
       views.forEach(v => {
         const el = document.getElementById('view-' + v);
         if (el) el.style.display = v === name ? '' : 'none';
@@ -1525,8 +1664,8 @@
       document.querySelectorAll('nav [data-view]').forEach(a => {
         a.classList.toggle('active', a.dataset.view === name);
       });
-      // Cargar usuarios la primera vez que se abre esa vista
       if (name === 'usuarios' && !allUsers.length) loadUsers();
+      if (name === 'configuracion') initConfig();
     }
 
     document.addEventListener('click', (e) => {
@@ -1540,6 +1679,186 @@
     showView('dashboard');
 
     init();
+
+    /* ══════════════════════════════════════════
+       CONFIGURACIÓN — PERMISOS Y ROLES
+    ══════════════════════════════════════════ */
+
+    // Permisos por defecto (se pueden sobrescribir con localStorage)
+    const DEFAULT_PERMS = {
+      'act_ver_todas':      { label:'Actividades — Ver todas',        Admin:true,  Supervisor:true,  Técnico:false, Consulta:true  },
+      'act_crear':          { label:'Actividades — Crear',            Admin:true,  Supervisor:true,  Técnico:true,  Consulta:false },
+      'act_editar_todas':   { label:'Actividades — Editar cualquiera',Admin:true,  Supervisor:true,  Técnico:false, Consulta:false },
+      'act_editar_propias': { label:'Actividades — Editar propias',   Admin:true,  Supervisor:true,  Técnico:true,  Consulta:false },
+      'act_eliminar':       { label:'Actividades — Eliminar',         Admin:true,  Supervisor:true,  Técnico:false, Consulta:false },
+      'act_exportar':       { label:'Actividades — Exportar CSV',     Admin:true,  Supervisor:true,  Técnico:false, Consulta:false },
+      'usr_ver':            { label:'Usuarios — Ver directorio',      Admin:true,  Supervisor:true,  Técnico:false, Consulta:false },
+      'usr_crear':          { label:'Usuarios — Crear',               Admin:true,  Supervisor:false, Técnico:false, Consulta:false },
+      'usr_editar':         { label:'Usuarios — Editar perfil/rol',   Admin:true,  Supervisor:false, Técnico:false, Consulta:false },
+      'usr_activar':        { label:'Usuarios — Activar/Desactivar',  Admin:true,  Supervisor:false, Técnico:false, Consulta:false },
+      'usr_reset_pass':     { label:'Usuarios — Reset contraseña',    Admin:true,  Supervisor:false, Técnico:false, Consulta:false },
+      'cfg_ver':            { label:'Configuración — Acceder',        Admin:true,  Supervisor:false, Técnico:false, Consulta:false },
+    };
+
+    // Roles fijos para Admin (no editables en la UI)
+    const LOCKED_ADMIN = new Set(['cfg_ver','usr_crear','usr_editar','usr_activar','usr_reset_pass']);
+    const ROLES = ['Admin','Supervisor','Técnico','Consulta'];
+
+    let currentPerms = null;
+
+    function loadPermissions() {
+      try {
+        const saved = localStorage.getItem('gestionti_perms');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          // Merge con DEFAULT_PERMS para que nuevas claves aparezcan
+          currentPerms = {};
+          for (const key of Object.keys(DEFAULT_PERMS)) {
+            currentPerms[key] = { ...DEFAULT_PERMS[key], ...(parsed[key] || {}) };
+          }
+          return;
+        }
+      } catch(e) {}
+      currentPerms = JSON.parse(JSON.stringify(DEFAULT_PERMS));
+    }
+
+    function savePermissions() {
+      try {
+        localStorage.setItem('gestionti_perms', JSON.stringify(currentPerms));
+        const msg = document.getElementById('permMsg');
+        msg.textContent = '✓ Permisos guardados localmente.';
+        msg.style.color = '#166534';
+        setTimeout(() => msg.textContent = '', 3000);
+      } catch(e) {
+        document.getElementById('permMsg').textContent = 'Error al guardar: ' + e.message;
+      }
+    }
+
+    function resetPermissions() {
+      if (!confirm('¿Restaurar todos los permisos a los valores predeterminados?')) return;
+      localStorage.removeItem('gestionti_perms');
+      currentPerms = JSON.parse(JSON.stringify(DEFAULT_PERMS));
+      renderPermGrid();
+      document.getElementById('permMsg').textContent = '✓ Restablecido.';
+      setTimeout(() => document.getElementById('permMsg').textContent = '', 2000);
+    }
+
+    function renderPermGrid() {
+      const grid = document.getElementById('permGrid');
+      // Mantener solo el header (primeros 5 divs) y reconstruir filas
+      const headers = Array.from(grid.children).slice(0, 5);
+      grid.innerHTML = '';
+      headers.forEach(h => grid.appendChild(h));
+
+      for (const [key, perm] of Object.entries(currentPerms)) {
+        // Etiqueta
+        const labelDiv = document.createElement('div');
+        labelDiv.style.cssText = 'font-size:12px;color:#344054';
+        labelDiv.textContent = perm.label;
+        grid.appendChild(labelDiv);
+
+        for (const role of ROLES) {
+          const cell = document.createElement('div');
+          const isAdminLocked = role === 'Admin' && LOCKED_ADMIN.has(key);
+          const adminAlwaysOn = role === 'Admin'; // Admin siempre tiene todo on
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'perm-toggle ' + ((perm[role] || adminAlwaysOn) ? 'on' : 'off')
+            + (isAdminLocked || adminAlwaysOn ? ' locked' : '');
+          btn.title = adminAlwaysOn ? 'Admin siempre tiene acceso' : (isAdminLocked ? 'Bloqueado' : 'Clic para alternar');
+
+          if (!adminAlwaysOn) {
+            btn.onclick = () => {
+              currentPerms[key][role] = !currentPerms[key][role];
+              btn.className = 'perm-toggle ' + (currentPerms[key][role] ? 'on' : 'off');
+            };
+          }
+
+          const lbl = document.createElement('span');
+          lbl.className = 'perm-label';
+          lbl.textContent = adminAlwaysOn ? 'Siempre' : (perm[role] ? 'Sí' : 'No');
+          if (!adminAlwaysOn) {
+            btn.addEventListener('click', () => {
+              lbl.textContent = currentPerms[key][role] ? 'Sí' : 'No';
+            });
+          }
+
+          cell.appendChild(btn);
+          cell.appendChild(lbl);
+          grid.appendChild(cell);
+        }
+      }
+    }
+
+    function renderConfigUsers() {
+      if (!allUsers.length) return;
+      const q    = (document.getElementById('configUserSearch')?.value || '').toLowerCase();
+      const fRole = document.getElementById('configRoleFilter')?.value || '';
+      const tbody = document.getElementById('configUserTable');
+      if (!tbody) return;
+
+      const filtered = allUsers.filter(u => {
+        const txt = [u.full_name, u.email].filter(Boolean).join(' ').toLowerCase();
+        return txt.includes(q) && (!fRole || u.role === fRole);
+      });
+
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#9ca3af;padding:20px">Sin resultados</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(u => {
+        const roleClass = 'role-' + (u.role||'Técnico').toLowerCase().replace('é','e').replace('ú','u');
+        const isSelf = u.id === currentUser?.id;
+        const options = ['Admin','Supervisor','Técnico','Consulta']
+          .map(r => `<option value="${r}" ${u.role===r?'selected':''}>${r}</option>`).join('');
+        return `<tr>
+          <td style="padding:6px 10px">
+            <div style="font-weight:600;color:#172033">${esc(u.full_name||'—')}</div>
+            <div style="font-size:11px;color:#9ca3af">${esc(u.email||'—')}</div>
+          </td>
+          <td style="padding:6px 10px"><span class="role-badge ${roleClass}">${u.role||'—'}</span></td>
+          <td style="padding:6px 10px">
+            ${isSelf
+              ? '<span style="font-size:11px;color:#9ca3af">Tu cuenta</span>'
+              : `<div style="display:flex;gap:6px;align-items:center">
+                  <select style="font-size:12px;border:1px solid #d8dee9;border-radius:6px;padding:4px 6px" id="rolesel-${u.id}">${options}</select>
+                  <button class="ghost" style="padding:4px 10px;font-size:11px" onclick="applyRoleChange('${u.id}','${esc(u.full_name||'')}')">Aplicar</button>
+                 </div>`
+            }
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function applyRoleChange(userId, name) {
+      const sel = document.getElementById('rolesel-' + userId);
+      if (!sel) return;
+      const newRole = sel.value;
+      if (!confirm(`¿Cambiar rol de ${name} a "${newRole}"?`)) return;
+      const { error } = await supabaseClient.from('profiles').update({ role: newRole }).eq('id', userId);
+      if (error) { alert('Error: ' + error.message); return; }
+      await loadUsers();
+      renderConfigUsers();
+    }
+
+    function initConfig() {
+      // Info del sistema
+      document.getElementById('cfgUrl').textContent  = window.SUPABASE_URL || '—';
+      document.getElementById('cfgUser').textContent = currentUser?.full_name || currentUser?.email || '—';
+      const roleClass = 'role-' + (currentUser?.role||'').toLowerCase().replace('é','e').replace('ú','u');
+      document.getElementById('cfgRole').innerHTML   = `<span class="role-badge ${roleClass}">${currentUser?.role||'—'}</span>`;
+      document.getElementById('cfgSince').textContent = new Date().toLocaleString('es',{dateStyle:'medium',timeStyle:'short'});
+
+      // Permisos
+      if (!currentPerms) loadPermissions();
+      renderPermGrid();
+
+      // Usuarios (para cambio rápido de rol)
+      if (!allUsers.length) loadUsers().then(renderConfigUsers);
+      else renderConfigUsers();
+    }
   </script>
 </body>
 </html>
