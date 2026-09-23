@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestión TI — Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">GESTIÓN <span>TI</span></div>
+    <nav>
+      <a class="active" href="dashboard.html">Dashboard</a>
+      <a href="#actividades">Actividades</a>
+    </nav>
+    <button id="logout" class="ghost">Cerrar sesión</button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1>Dashboard</h1>
+        <p class="muted" id="welcome">Cargando...</p>
+      </div>
+      <button class="primary" onclick="document.getElementById('activityTitle').focus()">+ Nueva actividad</button>
+    </header>
+
+    <section class="cards">
+      <article class="stat"><span>Total</span><strong id="total">0</strong></article>
+      <article class="stat"><span>En proceso</span><strong id="progress">0</strong></article>
+      <article class="stat"><span>No iniciadas</span><strong id="pending">0</strong></article>
+      <article class="stat"><span>Terminadas</span><strong id="done">0</strong></article>
+      <article class="stat danger"><span>Vencidas</span><strong id="overdue">0</strong></article>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="panel-head"><h2>Actividades por estado</h2></div>
+        <div id="statusBars"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><h2>Prioridades</h2></div>
+        <div id="priorityBars"></div>
+      </article>
+    </section>
+
+    <section class="panel" id="actividades">
+      <div class="panel-head">
+        <div>
+          <h2>Actividades</h2>
+          <p class="muted">Fuente: Supabase</p>
+        </div>
+        <input id="search" class="search" placeholder="Buscar actividad...">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Actividad</th><th>Proyecto</th><th>Prioridad</th><th>Estado</th><th>Entrega</th><th>Asignado</th>
+          </tr></thead>
+          <tbody id="activityTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Nueva actividad</h2></div>
+      <form id="activityForm" class="form-grid">
+        <label>Actividad<input id="activityTitle" required></label>
+        <label>Proyecto<input id="project" required placeholder="Ej. Gestión TI"></label>
+        <label>Área<input id="area" placeholder="Ej. TI"></label>
+        <label>Asignado<input id="assigned" placeholder="Hector"></label>
+        <label>Importancia<select id="importance"><option>Baja</option><option selected>Media</option><option>Alta</option></select></label>
+        <label>Prioridad<select id="priority"><option>Baja</option><option selected>Media</option><option>Alta</option></select></label>
+        <label>Estado<select id="status"><option>No iniciado</option><option>En proceso</option><option>Terminado</option></select></label>
+        <label>Fecha de entrega<input id="due" type="date"></label>
+        <label class="wide">Notas<textarea id="notes"></textarea></label>
+        <button class="primary wide" type="submit">Guardar actividad</button>
+        <p id="formMsg" class="muted wide"></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    let activities = [];
+
+    async function init() {
+      const session = await requireAuth();
+      if (!session) return;
+
+      const { data: profile } = await supabaseClient
+        .from('profiles').select('full_name,role').eq('id', session.user.id).maybeSingle();
+
+      document.getElementById('welcome').textContent =
+        `Sesión: ${profile?.full_name || session.user.email} · ${profile?.role || 'user'}`;
+
+      await loadActivities();
+    }
+
+    async function loadActivities() {
+      const { data, error } = await supabaseClient
+        .from('activities')
+        .select('id,title,importance,priority,status,due_date,assigned_to,projects(name),areas(name)')
+        .order('due_date', { ascending: true, nullsFirst: false });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+      activities = data || [];
+      render();
+    }
+
+    function render() {
+      const today = new Date().toISOString().slice(0,10);
+      const total = activities.length;
+      const progress = activities.filter(a => a.status === 'En proceso').length;
+      const pending = activities.filter(a => a.status === 'No iniciado').length;
+      const done = activities.filter(a => a.status === 'Terminado').length;
+      const overdue = activities.filter(a => a.due_date && a.due_date < today && a.status !== 'Terminado').length;
+
+      for (const [id,val] of Object.entries({total,progress,pending,done,overdue}))
+        document.getElementById(id).textContent = val;
+
+      renderBars('statusBars', ['No iniciado','En proceso','Terminado']);
+      renderBars('priorityBars', ['Baja','Media','Alta']);
+
+      const q = document.getElementById('search').value.toLowerCase();
+      const filtered = activities.filter(a =>
+        [a.title,a.projects?.name,a.areas?.name,a.assigned_to,a.status].filter(Boolean)
+        .join(' ').toLowerCase().includes(q)
+      );
+
+      document.getElementById('activityTable').innerHTML = filtered.map(a => `
+        <tr>
+          <td><strong>${escapeHtml(a.title)}</strong></td>
+          <td>${escapeHtml(a.projects?.name || '—')}</td>
+          <td><span class="pill ${a.priority.toLowerCase()}">${a.priority}</span></td>
+          <td><span class="pill">${a.status}</span></td>
+          <td>${a.due_date || '—'}</td>
+          <td>${escapeHtml(a.assigned_to || '—')}</td>
+        </tr>`).join('');
+    }
+
+    function renderBars(elementId, values) {
+      const el = document.getElementById(elementId);
+      el.innerHTML = values.map(v => {
+        const n = activities.filter(a => a[elementId === 'statusBars' ? 'status' : 'priority'] === v).length;
+        const pct = activities.length ? Math.round(n / activities.length * 100) : 0;
+        return `<div class="bar-row"><div><span>${v}</span><b>${n}</b></div>
+          <div class="bar"><i style="width:${pct}%"></i></div></div>`;
+      }).join('');
+    }
+
+    document.getElementById('search').addEventListener('input', render);
+
+    document.getElementById('activityForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('formMsg');
+      msg.textContent = 'Guardando...';
+
+      const projectName = document.getElementById('project').value.trim();
+      const areaName = document.getElementById('area').value.trim();
+
+      let projectId = null, areaId = null;
+
+      if (projectName) {
+        let r = await supabaseClient.from('projects').select('id').eq('name', projectName).maybeSingle();
+        if (!r.data) {
+          const ins = await supabaseClient.from('projects').insert({name: projectName}).select('id').single();
+          if (ins.error) { msg.textContent = ins.error.message; return; }
+          projectId = ins.data.id;
+        } else projectId = r.data.id;
+      }
+
+      if (areaName) {
+        let r = await supabaseClient.from('areas').select('id').eq('name', areaName).maybeSingle();
+        if (!r.data) {
+          const ins = await supabaseClient.from('areas').insert({name: areaName}).select('id').single();
+          if (ins.error) { msg.textContent = ins.error.message; return; }
+          areaId = ins.data.id;
+        } else areaId = r.data.id;
+      }
+
+      const status = document.getElementById('status').value;
+      const payload = {
+        title: document.getElementById('activityTitle').value.trim(),
+        project_id: projectId,
+        area_id: areaId,
+        assigned_to: document.getElementById('assigned').value.trim() || null,
+        importance: document.getElementById('importance').value,
+        priority: document.getElementById('priority').value,
+        status,
+        due_date: document.getElementById('due').value || null,
+        completed_at: status === 'Terminado' ? new Date().toISOString().slice(0,10) : null,
+        notes: document.getElementById('notes').value.trim() || null
+      };
+
+      const { error } = await supabaseClient.from('activities').insert(payload);
+      if (error) { msg.textContent = error.message; return; }
+
+      e.target.reset();
+      msg.textContent = 'Actividad guardada.';
+      await loadActivities();
+    });
+
+    document.getElementById('logout').addEventListener('click', signOut);
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+      }[c]));
+    }
+
+    init();
+  </script>
+</body>
+</html>
