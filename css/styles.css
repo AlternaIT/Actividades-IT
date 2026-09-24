@@ -111,3 +111,137 @@ td:first-child{white-space:normal;max-width:280px}
   #search{width:100%}
   .filters{width:100%}
 }
+
+/* ══════════════════════════════════════════
+   MODO OSCURO — [data-theme="dark"]
+══════════════════════════════════════════ */
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+[data-theme="dark"] body {
+  background: #0d1117;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .sidebar {
+  background: #0a0e18;
+  border-right: 1px solid #1e2535;
+}
+[data-theme="dark"] .main {
+  background: #0d1117;
+}
+/* Cards / panels */
+[data-theme="dark"] .stat,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .modal-box,
+[data-theme="dark"] .kpi {
+  background: #161b27;
+  border-color: #1e2535;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .panel-dash {
+  background: #161b27;
+  border-color: #1e2535;
+}
+/* Headings */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3 {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .kpi-val {
+  color: #f1f5f9;
+}
+/* Tables */
+[data-theme="dark"] th {
+  color: #8899b4;
+  border-bottom-color: #1e2535;
+}
+[data-theme="dark"] td {
+  border-bottom-color: #1e2535;
+  color: #cbd5e1;
+}
+[data-theme="dark"] .row-overdue td {
+  background: #1e1215;
+}
+[data-theme="dark"] tr:hover td {
+  background: #1a2133;
+}
+/* Inputs / selects */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea,
+[data-theme="dark"] .search,
+[data-theme="dark"] .form-grid input,
+[data-theme="dark"] .form-grid select,
+[data-theme="dark"] .form-grid textarea {
+  background: #1e2535;
+  border-color: #2d3748;
+  color: #e2e8f0;
+}
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] .search:focus {
+  border-color: #4d6fe8;
+  box-shadow: 0 0 0 3px #4d6fe830;
+}
+[data-theme="dark"] input:disabled {
+  background: #161b27;
+  color: #4a5568;
+}
+/* Buttons */
+[data-theme="dark"] .btn-outline {
+  background: #1e2535;
+  border-color: #2d3748;
+  color: #cbd5e1;
+}
+[data-theme="dark"] .btn-outline:hover {
+  background: #252d3d;
+}
+[data-theme="dark"] .ghost {
+  border-color: #ffffff18;
+  color: #a0aec0;
+}
+[data-theme="dark"] .ghost:hover {
+  background: #ffffff0d;
+}
+/* Misc */
+[data-theme="dark"] .muted { color: #718096; }
+[data-theme="dark"] .modal-overlay { background: #00000088; }
+[data-theme="dark"] .act-btn:hover { background: #1e2535; }
+[data-theme="dark"] .period-bar { background: #1e2535; }
+[data-theme="dark"] .period-btn.active { background: #252d3d; color: #7da4ff; }
+[data-theme="dark"] .period-btn { color: #718096; }
+[data-theme="dark"] .bar { background: #1e2535; }
+/* Config panels */
+[data-theme="dark"] .cfg-panel { background: #0d1117; }
+[data-theme="dark"] .cfg-card { background: #161b27; border-color: #1e2535; color: #e2e8f0; }
+[data-theme="dark"] .cfg-card:hover { background: #1a2133; }
+[data-theme="dark"] .cfg-card-title { color: #e2e8f0; }
+[data-theme="dark"] .cfg-card-desc { color: #718096; }
+[data-theme="dark"] .cfg-back { color: #7da4ff; }
+[data-theme="dark"] .theme-opts .theme-opt { background: #1e2535; border-color: #2d3748; color: #cbd5e1; }
+[data-theme="dark"] .theme-opts .theme-opt.selected { border-color: #4d6fe8; background: #1a2540; }
+/* Profile info boxes */
+[data-theme="dark"] #panelPerfil [style*="background:#f0f4ff"],
+[data-theme="dark"] [style*="background:#f8fafc"],
+[data-theme="dark"] [style*="background:#f0fdf4"],
+[data-theme="dark"] [style*="background:#fff7ed"],
+[data-theme="dark"] [style*="background:#fef2f2"] {
+  background: #1e2535 !important;
+}
+[data-theme="dark"] code { color: #7da4ff; }
+[data-theme="dark"] .panel-title { color: #a0aec0; }
+/* Auth page */
+[data-theme="dark"] .auth-page { background: linear-gradient(135deg,#0d1117,#1a2133); }
+[data-theme="dark"] .auth-card { background: #161b27; border: 1px solid #1e2535; }
+[data-theme="dark"] .auth-card label, [data-theme="dark"] .login-sub { color: #a0aec0; }
+/* Scrollbar */
+[data-theme="dark"] ::-webkit-scrollbar { width: 6px; }
+[data-theme="dark"] ::-webkit-scrollbar-track { background: #0d1117; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 3px; }
+
+/* Auto dark: follow OS */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) body { background: #0d1117; color: #e2e8f0; }
+}
