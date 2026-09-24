@@ -1304,6 +1304,13 @@
     let allUsers    = [];     // lista de profiles para el módulo usuarios
     let euIsActive  = true;   // estado del toggle en modal editar
 
+    /* ── LOGS (en memoria, sesión actual) ── */
+    const sessionLogs = [];
+    function addLog(type, msg) {
+      sessionLogs.unshift({ type, msg, time: new Date() });
+      if (sessionLogs.length > 200) sessionLogs.pop();
+    }
+
     /* ══════════════════════════════════════════
        NORMALIZAR ROL (BD → App)
        La BD acepta: 'admin', 'manager', 'user'
@@ -1314,9 +1321,9 @@
       const r = String(rawRole).toLowerCase().trim();
       if (r === 'admin' || r === 'administrator') return 'Admin';
       if (r === 'manager' || r === 'supervisor' || r === 'gestor') return 'Supervisor';
-      if (r === 'tecnico' || r === 'técnico' || r === 'technician') return 'Técnico';
+      if (r === 'tecnico' || r === 'técnico' || r === 'technician' || r === 'user') return 'Técnico';
       if (r === 'consulta' || r === 'viewer' || r === 'readonly' || r === 'read-only') return 'Consulta';
-      // 'user' u otro valor desconocido → Técnico (rol más restrictivo por defecto)
+      // cualquier otro valor desconocido → Técnico (rol más restrictivo por defecto)
       console.warn(`[GestionTI] Rol desconocido en BD: "${rawRole}" → se asigna 'Técnico'`);
       return 'Técnico';
     }
@@ -1364,6 +1371,8 @@
       applyRoleRestrictions();
       await loadActivities();
       setupPeriodBar();
+      // Log de sesión iniciada (aquí currentUser ya está definido)
+      addLog('auth', `Sesión iniciada como ${currentUser.full_name||currentUser.email} (${currentUser.role})`);
     }
 
     /* ══════════════════════════════════════════
@@ -1918,13 +1927,26 @@
        USER MANAGEMENT — CARGAR USUARIOS
     ══════════════════════════════════════════ */
     async function loadUsers() {
-      const { data, error } = await supabaseClient
+      // Primero intentamos con todas las columnas opcionales
+      let { data, error } = await supabaseClient
         .from('profiles')
         .select('id,full_name,email,role,area,is_active,last_seen')
         .order('full_name');
-      if (error) { console.error(error); return; }
-      // Normalizar roles BD → App para mostrar correctamente en la UI
-      allUsers = (data || []).map(u => ({ ...u, role: normalizeRole(u.role) }));
+      if (error) {
+        // Si falla (columnas opcionales no existen aún), reintentamos con columnas base
+        console.warn('[GestionTI] loadUsers retry con columnas base:', error.message);
+        ({ data, error } = await supabaseClient
+          .from('profiles')
+          .select('id,full_name,role,area,is_active')
+          .order('full_name'));
+        if (error) { console.error('[GestionTI] loadUsers error:', error); return; }
+      }
+      // Normalizar roles BD → App y completar campo email faltante con string vacío
+      allUsers = (data || []).map(u => ({
+        ...u,
+        email: u.email || '',
+        role: normalizeRole(u.role),
+      }));
       renderUserKpis();
       renderUsers();
     }
@@ -2243,10 +2265,10 @@
 
     function renderPermGrid() {
       const grid = document.getElementById('permGrid');
-      // Mantener solo el header (primeros 5 divs) y reconstruir filas
-      const headers = Array.from(grid.children).slice(0, 5);
-      grid.innerHTML = '';
-      headers.forEach(h => grid.appendChild(h));
+      // Limpiar SOLO las filas de datos (después del header de 5 celdas), preservar los headers del DOM
+      const allCells = Array.from(grid.children);
+      // Si ya hay más de 5 celdas, quitar las que no son header
+      allCells.slice(5).forEach(c => c.remove());
 
       for (const [key, perm] of Object.entries(currentPerms)) {
         // Etiqueta
@@ -2290,7 +2312,11 @@
     }
 
     function renderConfigUsers() {
-      if (!allUsers.length) return;
+      if (!allUsers.length) {
+        const tbody = document.getElementById('configUserTable');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#9ca3af;padding:20px">Cargando usuarios…</td></tr>';
+        return;
+      }
       const q    = (document.getElementById('configUserSearch')?.value || '').toLowerCase();
       const fRole = document.getElementById('configRoleFilter')?.value || '';
       const tbody = document.getElementById('configUserTable');
@@ -2331,9 +2357,9 @@
     }
 
     /* Convierte rol de la app ('Admin','Supervisor','Técnico','Consulta')
-       al valor que acepta el constraint de la BD ('admin','manager','user') */
+       al valor que acepta el constraint de la BD ('admin','manager','user','consulta') */
     function denormalizeRole(appRole) {
-      const map = { 'Admin':'admin', 'Supervisor':'manager', 'Técnico':'user', 'Consulta':'user' };
+      const map = { 'Admin':'admin', 'Supervisor':'manager', 'Técnico':'user', 'Consulta':'consulta' };
       return map[appRole] || 'user';
     }
 
@@ -2341,10 +2367,23 @@
       const sel = document.getElementById('rolesel-' + userId);
       if (!sel) return;
       const newRole = sel.value;          // valor de la app: 'Admin', 'Supervisor', etc.
-      const dbRole  = denormalizeRole(newRole); // valor para la BD: 'admin', 'manager', 'user'
+      const dbRole  = denormalizeRole(newRole); // valor para la BD: 'admin', 'manager', 'user', 'consulta'
       if (!confirm(`¿Cambiar rol de ${name} a "${newRole}"?`)) return;
+
+      // Deshabilitar el select y botón mientras se guarda
+      sel.disabled = true;
+      const btn = sel.nextElementSibling;
+      if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
       const { error } = await supabaseClient.from('profiles').update({ role: dbRole }).eq('id', userId);
-      if (error) { alert('Error: ' + error.message); return; }
+
+      if (error) {
+        alert('Error al cambiar rol: ' + error.message);
+        sel.disabled = false;
+        if (btn) { btn.disabled = false; btn.textContent = 'Aplicar'; }
+        return;
+      }
+
       addLog('user', `Rol cambiado: ${name} → ${newRole}`);
       await loadUsers();
       renderConfigUsers();
@@ -2353,11 +2392,6 @@
     /* ══════════════════════════════════════════
        LOGS (en memoria, sesión actual)
     ══════════════════════════════════════════ */
-    const sessionLogs = [];
-    function addLog(type, msg) {
-      sessionLogs.unshift({ type, msg, time: new Date() });
-      if (sessionLogs.length > 200) sessionLogs.pop();
-    }
     function renderLogs() {
       const filter = document.getElementById('logFilter')?.value || '';
       const list   = document.getElementById('logList');
@@ -2426,9 +2460,8 @@
       const name = currentUser?.full_name || '';
       const initials = name.split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase() || '?';
       const big = document.getElementById('profileAvatarBig');
-      big.textContent = initials;
+      big.textContent = initials;           // textContent primero (limpia innerHTML también)
       big.style.background = '#4d6fe8';
-      big.innerHTML = initials;
       addLog('config', 'Avatar eliminado');
     }
 
@@ -2438,10 +2471,25 @@
       const area = document.getElementById('profileArea').value.trim();
       if (!name) { msg.textContent = '⚠️ El nombre no puede estar vacío.'; msg.style.color='#ef4444'; return; }
       msg.textContent = 'Guardando…'; msg.style.color = '#687386';
-      const { error } = await supabaseClient.from('profiles')
+
+      // Intentar actualizar full_name y area; si area no existe en la BD, reintentar solo con full_name
+      let { error } = await supabaseClient.from('profiles')
         .update({ full_name: name, area: area || null })
         .eq('id', currentUser.id);
-      if (error) { msg.textContent = '✕ ' + error.message; msg.style.color='#ef4444'; return; }
+
+      if (error && error.message && error.message.toLowerCase().includes('area')) {
+        // La columna area aún no existe: guardar solo el nombre
+        ({ error } = await supabaseClient.from('profiles')
+          .update({ full_name: name })
+          .eq('id', currentUser.id));
+      }
+
+      if (error) {
+        msg.textContent = '✕ Error al guardar: ' + error.message;
+        msg.style.color = '#ef4444';
+        return;
+      }
+
       currentUser.full_name = name;
       currentUser.area      = area;
       document.getElementById('welcome').textContent = `${name} · ${currentUser.role}`;
@@ -2454,23 +2502,46 @@
        CAMBIAR CONTRASEÑA
     ══════════════════════════════════════════ */
     async function changePassword() {
-      const msg     = document.getElementById('pwMsg');
-      const newPw   = document.getElementById('pwNew').value;
-      const confirm = document.getElementById('pwConfirm').value;
-      if (!newPw || newPw.length < 6) { msg.textContent = '⚠️ La contraseña debe tener al menos 6 caracteres.'; msg.style.color='#ef4444'; return; }
-      if (newPw !== confirm) { msg.textContent = '⚠️ Las contraseñas no coinciden.'; msg.style.color='#ef4444'; return; }
-      msg.textContent = 'Actualizando…'; msg.style.color='#687386';
+      const msg        = document.getElementById('pwMsg');
+      const pwNewEl    = document.getElementById('pwNew');
+      const pwConfEl   = document.getElementById('pwConfirm');
+      const newPw      = pwNewEl.value;
+      const confirmPw  = pwConfEl.value;
+
+      if (!newPw || newPw.length < 6) {
+        msg.textContent = '⚠️ La contraseña debe tener al menos 6 caracteres.';
+        msg.style.color = '#ef4444'; return;
+      }
+      if (newPw !== confirmPw) {
+        msg.textContent = '⚠️ Las contraseñas no coinciden.';
+        msg.style.color = '#ef4444'; return;
+      }
+
+      msg.textContent = 'Actualizando…'; msg.style.color = '#687386';
+
       const { error } = await supabaseClient.auth.updateUser({ password: newPw });
+
       if (error) {
-        // Si falla por sesión, enviar reset por email
-        await supabaseClient.auth.resetPasswordForEmail(currentUser.email, { redirectTo: window.location.origin + '/index.html' });
-        msg.textContent = 'Se envió un enlace de restablecimiento a tu correo.'; msg.style.color='#4d6fe8';
-        addLog('auth', 'Reset de contraseña enviado por email');
+        // La sesión puede necesitar reautenticación: enviar reset por email como alternativa
+        const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(
+          currentUser.email,
+          { redirectTo: window.location.origin + '/index.html?reset=1' }
+        );
+        if (resetError) {
+          msg.textContent = '✕ No se pudo actualizar la contraseña: ' + resetError.message;
+          msg.style.color = '#ef4444';
+        } else {
+          msg.textContent = '📧 Se envió un enlace de restablecimiento a ' + currentUser.email;
+          msg.style.color = '#4d6fe8';
+          addLog('auth', 'Reset de contraseña enviado por email a ' + currentUser.email);
+        }
         return;
       }
-      document.getElementById('pwNew').value = '';
-      document.getElementById('pwConfirm').value = '';
-      msg.textContent = '✓ Contraseña actualizada correctamente.'; msg.style.color='#166534';
+
+      pwNewEl.value  = '';
+      pwConfEl.value = '';
+      msg.textContent = '✓ Contraseña actualizada correctamente.';
+      msg.style.color = '#166534';
       addLog('auth', 'Contraseña actualizada');
     }
 
@@ -2657,7 +2728,15 @@
       if (panelId === 'panelSistema')  {
         document.getElementById('sysActTotal').textContent = activities.length;
         document.getElementById('sysActDone').textContent  = activities.filter(a=>a.status==='Terminado').length;
-        document.getElementById('sysUsers').textContent    = allUsers.filter(u=>u.is_active!==false).length || '—';
+        if (allUsers.length) {
+          document.getElementById('sysUsers').textContent = allUsers.filter(u=>u.is_active!==false).length;
+        } else {
+          document.getElementById('sysUsers').textContent = '…';
+          // Cargar usuarios si aún no se cargaron
+          loadUsers().then(() => {
+            document.getElementById('sysUsers').textContent = allUsers.filter(u=>u.is_active!==false).length;
+          });
+        }
       }
     }
 
@@ -2670,16 +2749,22 @@
       closeCfgPanel();
       // Ocultar sección sistema para no-Admin
       const isAdmin = currentUser?.role === 'Admin';
-      document.getElementById('cfgSysLabel').style.display = isAdmin ? '' : 'none';
-      document.getElementById('cfgSysCards').style.display = isAdmin ? '' : 'none';
+      const sysLabel = document.getElementById('cfgSysLabel');
+      const sysCards = document.getElementById('cfgSysCards');
+      if (sysLabel) sysLabel.style.display = isAdmin ? '' : 'none';
+      if (sysCards) sysCards.style.display = isAdmin ? '' : 'none';
       // Info sistema
-      document.getElementById('cfgUrl').textContent   = window.SUPABASE_URL || '—';
-      document.getElementById('cfgUser').textContent  = currentUser?.full_name || currentUser?.email || '—';
-      const roleClass = 'role-' + (currentUser?.role||'').toLowerCase().replace('é','e').replace('ú','u');
-      document.getElementById('cfgRole').innerHTML    = `<span class="role-badge ${roleClass}">${currentUser?.role||'—'}</span>`;
-      document.getElementById('cfgSince').textContent = new Date().toLocaleString('es',{dateStyle:'medium',timeStyle:'short'});
-      // Log de acceso
-      addLog('auth', `Sesión iniciada como ${currentUser?.full_name||currentUser?.email} (${currentUser?.role})`);
+      const cfgUrl   = document.getElementById('cfgUrl');
+      const cfgUser  = document.getElementById('cfgUser');
+      const cfgRole  = document.getElementById('cfgRole');
+      const cfgSince = document.getElementById('cfgSince');
+      if (cfgUrl)   cfgUrl.textContent   = window.SUPABASE_URL || '—';
+      if (cfgUser)  cfgUser.textContent  = currentUser?.full_name || currentUser?.email || '—';
+      if (cfgRole) {
+        const roleClass = 'role-' + (currentUser?.role||'').toLowerCase().replace('é','e').replace('ú','u');
+        cfgRole.innerHTML = `<span class="role-badge ${roleClass}">${currentUser?.role||'—'}</span>`;
+      }
+      if (cfgSince) cfgSince.textContent = new Date().toLocaleString('es',{dateStyle:'medium',timeStyle:'short'});
     }
   </script>
 </body>
