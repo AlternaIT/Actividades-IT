@@ -1374,6 +1374,13 @@ code {
 [data-theme="dark"] .role-tecnico    { background: var(--blue-tint);      color: var(--blue); }
 [data-theme="dark"] .role-consulta   { background: var(--slate-tint);     color: var(--slate); }
 
+/* Dark: activity board */
+[data-theme="dark"] .activity-lane { background: var(--bg-secondary); }
+[data-theme="dark"] .activity-card { background: var(--bg-card); }
+[data-theme="dark"] .activity-card-footer { background: var(--bg-secondary); }
+[data-theme="dark"] .activity-stat-chip { background: var(--bg-card); }
+[data-theme="dark"] .activity-empty { background: var(--bg-secondary); }
+
 /* Dark: pills */
 [data-theme="dark"] .pill.alta   { background: var(--red-tint);    color: #FF7A75; }
 [data-theme="dark"] .pill.media  { background: var(--amber-tint);  color: var(--amber); }
@@ -1512,30 +1519,224 @@ code {
   line-height: 1.6;
 }
 .sql-note strong { color: var(--label-primary); }
+/* ══════════════════════════════════════════
+   ACTIVIDADES — DISEÑO PROFESIONAL
+══════════════════════════════════════════ */
 .activities-intro { margin-top: 4px; color: var(--label-secondary); font-size: 13px; }
-.activity-board { display: grid; grid-template-columns: repeat(3, minmax(250px, 1fr)); gap: 16px; align-items: start; padding: 4px 0 8px; }
-.activity-lane { min-width: 0; padding: 12px; border: 1px solid var(--border-card); border-radius: var(--r-lg); background: var(--bg-primary); }
-.activity-lane[data-state="No iniciado"] { --lane-accent: #f59e0b; }
-.activity-lane[data-state="En proceso"] { --lane-accent: #4d6fe8; }
-.activity-lane[data-state="Terminado"] { --lane-accent: #22a06b; }
-.activity-lane[data-state="Otros"] { --lane-accent: #8e8e93; }
-.activity-lane summary { list-style: none; display: flex; align-items: center; gap: 9px; cursor: pointer; padding: 5px 3px 12px; color: var(--label-primary); font-weight: 700; }
+
+/* Header con stats rápidos */
+.activity-stats-bar {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.activity-stat-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: var(--r-pill);
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-sm);
+  font-size: 12px; font-weight: 600; color: var(--label-secondary);
+  transition: box-shadow .18s var(--ease);
+}
+.activity-stat-chip .chip-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.activity-stat-chip .chip-num {
+  color: var(--label-primary); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+
+/* Board kanban */
+.activity-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 14px;
+  align-items: start;
+  padding: 2px 0 12px;
+}
+
+/* Lane (columna) */
+.activity-lane {
+  min-width: 0;
+  border-radius: var(--r-xl);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-card);
+  overflow: hidden;
+}
+.activity-lane[data-state="No iniciado"] { --lane-accent: #F59E0B; --lane-bg: rgba(245,158,11,0.06); }
+.activity-lane[data-state="En proceso"]  { --lane-accent: #4D6FE8; --lane-bg: rgba(77,111,232,0.06); }
+.activity-lane[data-state="Terminado"]   { --lane-accent: #22C55E; --lane-bg: rgba(34,197,94,0.06); }
+.activity-lane[data-state="Otros"]       { --lane-accent: #8E8E93; --lane-bg: rgba(142,142,147,0.05); }
+
+/* Cabecera de columna */
+.activity-lane summary {
+  list-style: none;
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer;
+  padding: 14px 14px 13px;
+  background: var(--lane-bg);
+  border-bottom: 1px solid var(--border-card);
+  color: var(--label-primary);
+  font-weight: 700; font-size: 13px;
+  letter-spacing: -0.01em;
+  user-select: none;
+}
 .activity-lane summary::-webkit-details-marker { display: none; }
-.lane-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--lane-accent); flex: 0 0 auto; }
-.lane-count { margin-left: auto; min-width: 26px; padding: 2px 8px; border-radius: 99px; background: var(--bg-secondary); color: var(--label-secondary); text-align: center; font-size: 12px; }
-.lane-items { display: grid; gap: 9px; }
-.activity-card { min-width: 0; padding: 13px; border: 1px solid var(--border-card); border-left: 3px solid var(--lane-accent); border-radius: 12px; background: var(--bg-card); box-shadow: var(--shadow-sm); }
-.activity-card.row-overdue { border-left-color: var(--red); }
-.activity-card-title { color: var(--label-primary); font-size: 13px; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }
-.activity-card-note { margin-top: 5px; color: var(--label-secondary); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
-.activity-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 11px; }
+.activity-lane[open] summary { border-bottom-color: var(--border-card); }
+
+.lane-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--lane-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lane-accent) 18%, transparent);
+  flex: 0 0 auto;
+}
+.lane-count {
+  margin-left: auto;
+  min-width: 24px; padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--lane-accent);
+  color: #fff;
+  text-align: center; font-size: 11px; font-weight: 700;
+}
+.lane-toggle-icon {
+  color: var(--label-tertiary); font-size: 11px;
+  transition: transform .2s var(--ease);
+}
+.activity-lane[open] .lane-toggle-icon { transform: rotate(90deg); }
+
+/* Items dentro del lane */
+.lane-items {
+  display: grid; gap: 8px;
+  padding: 12px;
+}
+
+/* ── Tarjeta de actividad ── */
+.activity-card {
+  position: relative;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid var(--border-card);
+  border-radius: var(--r-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow .18s var(--ease), transform .18s var(--ease);
+}
+.activity-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Barra de acento superior */
+.activity-card::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: var(--lane-accent);
+  border-radius: 0;
+}
+.activity-card.row-overdue::before { background: var(--red); }
+
+.activity-card-body { padding: 12px 13px 0; }
+
+.activity-card-title {
+  color: var(--label-primary);
+  font-size: 13px; font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  letter-spacing: -0.01em;
+}
+.activity-card-note {
+  margin-top: 6px;
+  color: var(--label-secondary);
+  font-size: 12px; line-height: 1.5;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Tags: prioridad + estado */
+.activity-card-meta {
+  display: flex; flex-wrap: wrap;
+  align-items: center; gap: 5px;
+  margin-top: 10px;
+}
 .activity-card-meta .pill { white-space: nowrap; }
-.activity-card-context { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 9px; color: var(--label-secondary); font-size: 11px; }
-.activity-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-card); color: var(--label-secondary); font-size: 11px; }
-.activity-card-actions { display: flex; gap: 4px; }
-.activity-empty { grid-column: 1 / -1; padding: 32px 16px; border: 1px dashed var(--separator-opaque); border-radius: var(--r-lg); color: var(--label-secondary); text-align: center; background: var(--bg-primary); }
+
+/* Proyecto / Área */
+.activity-card-context {
+  display: flex; flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 9px;
+  color: var(--label-secondary);
+  font-size: 11px; font-weight: 500;
+}
+.activity-card-context span {
+  display: flex; align-items: center; gap: 4px;
+}
+.ctx-icon { opacity: .55; font-size: 10px; }
+
+/* Footer con fecha + persona + acciones */
+.activity-card-footer {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 8px;
+  margin-top: 10px; padding: 8px 13px;
+  border-top: 1px solid var(--border-card);
+  background: var(--bg-primary);
+  color: var(--label-secondary); font-size: 11px;
+}
+.footer-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.footer-date { font-weight: 600; }
+.footer-assignee {
+  display: flex; align-items: center; gap: 5px;
+}
+.assignee-avatar {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--indigo) 100%);
+  color: #fff; font-size: 8px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; letter-spacing: 0;
+}
+.overdue-badge {
+  display: flex; align-items: center; gap: 3px;
+  padding: 1px 6px; border-radius: var(--r-pill);
+  background: var(--red-tint); color: var(--red);
+  font-size: 10px; font-weight: 700;
+}
+
+.activity-card-actions { display: flex; gap: 2px; }
+
+/* Estado vacío del board */
+.activity-empty {
+  grid-column: 1 / -1;
+  padding: 48px 20px;
+  border: 1.5px dashed var(--separator-opaque);
+  border-radius: var(--r-xl);
+  color: var(--label-tertiary);
+  text-align: center;
+  background: var(--bg-primary);
+  font-size: 13px;
+}
+.activity-empty-icon { font-size: 32px; margin-bottom: 10px; opacity: .5; }
+
+/* Estado vacío dentro de una lane */
+.lane-empty {
+  padding: 18px 10px;
+  text-align: center;
+  color: var(--label-tertiary);
+  font-size: 12px;
+}
+
+/* ── Responsive ── */
 @media (max-width: 1050px) { .activity-board { grid-template-columns: repeat(2, minmax(240px, 1fr)); } }
-@media (max-width: 700px) { #view-actividades .panel-head { align-items: flex-start; flex-direction: column; } #view-actividades .filters { display: grid; grid-template-columns: 1fr 1fr; width: 100%; } #view-actividades .filters .search:first-child { grid-column: 1 / -1; width: 100%; } .activity-board { grid-template-columns: 1fr; gap: 11px; } .activity-lane { padding: 10px; } }
+@media (max-width: 700px) {
+  #view-actividades .panel-head { align-items: flex-start; flex-direction: column; }
+  #view-actividades .filters { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  #view-actividades .filters .search:first-child { grid-column: 1 / -1; width: 100%; }
+  .activity-board { grid-template-columns: 1fr; gap: 10px; }
+  .activity-stats-bar { gap: 7px; }
+}
 </style>
 </head>
 <body>
@@ -1806,23 +2007,28 @@ code {
     <div id="view-actividades" class="spa-view" style="display:none">
     <section class="panel" id="actividades">
       <div class="panel-head">
-        <div><h2>Actividades</h2><p class="activities-intro">Organizadas por estado para que cada pendiente sea fácil de encontrar.</p></div>
+        <div>
+          <h2>Actividades</h2>
+          <p class="activities-intro">Tablero kanban · organizado por estado</p>
+        </div>
         <div class="filters">
           <input id="search" class="search" type="search" aria-label="Buscar actividades" placeholder="Buscar actividad…">
           <select id="filterStatus" class="search" aria-label="Filtrar por estado" style="width:auto">
-            <option value="">Estado</option>
+            <option value="">Todos los estados</option>
             <option>No iniciado</option>
             <option>En proceso</option>
             <option>Terminado</option>
           </select>
           <select id="filterPriority" class="search" aria-label="Filtrar por prioridad" style="width:auto">
-            <option value="">Prioridad</option>
+            <option value="">Todas las prioridades</option>
             <option>Baja</option>
             <option>Media</option>
             <option>Alta</option>
           </select>
         </div>
       </div>
+      <!-- Barra de resumen rápido -->
+      <div id="activityStatsBar" class="activity-stats-bar"></div>
       <div id="activityBoard" class="activity-board" aria-live="polite"></div>
     </section><!-- /actividades panel -->
     </div><!-- /view-actividades -->
@@ -3151,32 +3357,88 @@ code {
       const canEditOwn = role === 'Técnico'; // técnico puede editar las suyas
 
       const board = document.getElementById('activityBoard');
+      const statsBar = document.getElementById('activityStatsBar');
+
+      // ── Stats bar ──
+      const total   = filtered.length;
+      const noPend  = filtered.filter(a => a.status === 'No iniciado').length;
+      const inProg  = filtered.filter(a => a.status === 'En proceso').length;
+      const done    = filtered.filter(a => a.status === 'Terminado').length;
+      const overdueCount = filtered.filter(a => overdue(a)).length;
+      statsBar.innerHTML = [
+        { dot:'#F59E0B', num: noPend,       label: 'Pendientes'  },
+        { dot:'#4D6FE8', num: inProg,        label: 'En proceso'  },
+        { dot:'#22C55E', num: done,           label: 'Terminadas'  },
+        ...(overdueCount ? [{ dot:'#FF3B30', num: overdueCount, label: 'Vencidas' }] : []),
+      ].map(s => `
+        <div class="activity-stat-chip">
+          <span class="chip-dot" style="background:${s.dot}"></span>
+          <span class="chip-num">${s.num}</span>
+          <span>${s.label}</span>
+        </div>`).join('');
+
       if (!filtered.length) {
-        board.innerHTML = '<div class="activity-empty">No encontramos actividades con estos filtros.</div>';
+        board.innerHTML = `<div class="activity-empty">
+          <div class="activity-empty-icon">📋</div>
+          <div style="font-weight:600;font-size:14px;color:var(--label-secondary);margin-bottom:4px">Sin actividades</div>
+          <div>No encontramos resultados con estos filtros.</div>
+        </div>`;
         return;
       }
+
+      // ── Iniciales para avatar ──
+      const initials = (name) => (name || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
 
       const states = ['No iniciado', 'En proceso', 'Terminado'];
       const lanes = [...states.map(status => [status, filtered.filter(a => a.status === status)]),
         ['Otros', filtered.filter(a => !states.includes(a.status))]].filter(([, items]) => items.length);
+
       board.innerHTML = lanes.map(([status, items]) => `
         <details class="activity-lane" data-state="${esc(status)}" open>
-          <summary><span class="lane-dot" aria-hidden="true"></span><span>${esc(status)}</span><span class="lane-count">${items.length}</span></summary>
-          <div class="lane-items">${items.map(a => {
-            const isOwn = a.assigned_to === currentUser?.full_name;
-            const showEdit = canEdit || (canEditOwn && isOwn);
-            const showDelete = canDelete;
-            const due = a.due_date ? new Date(`${a.due_date}T00:00:00`).toLocaleDateString('es', { day:'numeric', month:'short', year:'numeric' }) : 'Sin fecha';
-            return `<article class="activity-card ${overdue(a) ? 'row-overdue' : ''}">
-              <div class="activity-card-title">${esc(a.title || 'Actividad sin título')}</div>
-              ${a.notes ? `<p class="activity-card-note">${esc(a.notes.slice(0,120))}${a.notes.length > 120 ? '…' : ''}</p>` : ''}
-              <div class="activity-card-meta"><span class="pill ${(a.priority || '').toLowerCase()}">${esc(a.priority || 'Sin prioridad')}</span>
-                ${overdue(a) ? '<span class="pill status-vencida">Vencida</span>' : ''}</div>
-              <div class="activity-card-context">${a.projects?.name ? `<span>▦ ${esc(a.projects.name)}</span>` : ''}${a.areas?.name ? `<span>⌁ ${esc(a.areas.name)}</span>` : ''}</div>
-              <div class="activity-card-footer"><span>◷ ${esc(due)}${a.assigned_to ? ` · ${esc(a.assigned_to)}` : ''}</span>
-                <span class="activity-card-actions">${showEdit ? `<button class="act-btn" type="button" aria-label="Editar ${esc(a.title)}" title="Editar" data-activity-action="edit" data-activity-id="${esc(a.id)}">✏️</button>` : ''}${showDelete ? `<button class="act-btn" type="button" aria-label="Eliminar ${esc(a.title)}" title="Eliminar" data-activity-action="delete" data-activity-id="${esc(a.id)}">🗑️</button>` : ''}</span></div>
-            </article>`;
-          }).join('')}</div>
+          <summary>
+            <span class="lane-dot" aria-hidden="true"></span>
+            <span>${esc(status)}</span>
+            <span class="lane-count">${items.length}</span>
+            <span class="lane-toggle-icon" aria-hidden="true">›</span>
+          </summary>
+          <div class="lane-items">
+            ${items.length === 0 ? `<div class="lane-empty">Sin actividades aquí</div>` : items.map(a => {
+              const isOwn = a.assigned_to === currentUser?.full_name;
+              const showEdit   = canEdit   || (canEditOwn && isOwn);
+              const showDelete = canDelete;
+              const isOverdue  = overdue(a);
+              const due = a.due_date
+                ? new Date(`${a.due_date}T00:00:00`).toLocaleDateString('es', { day:'numeric', month:'short' })
+                : null;
+              return `<article class="activity-card${isOverdue ? ' row-overdue' : ''}" role="listitem">
+                <div class="activity-card-body">
+                  <div class="activity-card-title">${esc(a.title || 'Actividad sin título')}</div>
+                  ${a.notes ? `<p class="activity-card-note">${esc(a.notes.slice(0,100))}${a.notes.length > 100 ? '…' : ''}</p>` : ''}
+                  <div class="activity-card-meta">
+                    ${a.priority ? `<span class="pill ${(a.priority).toLowerCase()}">${esc(a.priority)}</span>` : ''}
+                    ${isOverdue ? `<span class="overdue-badge">⚠ Vencida</span>` : ''}
+                  </div>
+                  ${(a.projects?.name || a.areas?.name) ? `<div class="activity-card-context">
+                    ${a.projects?.name ? `<span><span class="ctx-icon">⊞</span>${esc(a.projects.name)}</span>` : ''}
+                    ${a.areas?.name   ? `<span><span class="ctx-icon">⌁</span>${esc(a.areas.name)}</span>`   : ''}
+                  </div>` : ''}
+                </div>
+                <div class="activity-card-footer">
+                  <div class="footer-meta">
+                    ${due ? `<span class="footer-date${isOverdue ? '" style="color:var(--red)' : ''}">${esc(due)}</span>` : ''}
+                    ${a.assigned_to ? `<span class="footer-assignee">
+                      <span class="assignee-avatar" aria-hidden="true">${initials(a.assigned_to)}</span>
+                      <span>${esc(a.assigned_to.split(' ')[0])}</span>
+                    </span>` : ''}
+                  </div>
+                  <span class="activity-card-actions">
+                    ${showEdit   ? `<button class="act-btn" type="button" aria-label="Editar ${esc(a.title)}" title="Editar" data-activity-action="edit" data-activity-id="${esc(a.id)}">✏️</button>` : ''}
+                    ${showDelete ? `<button class="act-btn" type="button" aria-label="Eliminar ${esc(a.title)}" title="Eliminar" data-activity-action="delete" data-activity-id="${esc(a.id)}">🗑️</button>` : ''}
+                  </span>
+                </div>
+              </article>`;
+            }).join('')}
+          </div>
         </details>`).join('');
     }
 
