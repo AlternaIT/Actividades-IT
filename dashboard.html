@@ -1512,6 +1512,30 @@ code {
   line-height: 1.6;
 }
 .sql-note strong { color: var(--label-primary); }
+.activities-intro { margin-top: 4px; color: var(--label-secondary); font-size: 13px; }
+.activity-board { display: grid; grid-template-columns: repeat(3, minmax(250px, 1fr)); gap: 16px; align-items: start; padding: 4px 0 8px; }
+.activity-lane { min-width: 0; padding: 12px; border: 1px solid var(--border-card); border-radius: var(--r-lg); background: var(--bg-primary); }
+.activity-lane[data-state="No iniciado"] { --lane-accent: #f59e0b; }
+.activity-lane[data-state="En proceso"] { --lane-accent: #4d6fe8; }
+.activity-lane[data-state="Terminado"] { --lane-accent: #22a06b; }
+.activity-lane[data-state="Otros"] { --lane-accent: #8e8e93; }
+.activity-lane summary { list-style: none; display: flex; align-items: center; gap: 9px; cursor: pointer; padding: 5px 3px 12px; color: var(--label-primary); font-weight: 700; }
+.activity-lane summary::-webkit-details-marker { display: none; }
+.lane-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--lane-accent); flex: 0 0 auto; }
+.lane-count { margin-left: auto; min-width: 26px; padding: 2px 8px; border-radius: 99px; background: var(--bg-secondary); color: var(--label-secondary); text-align: center; font-size: 12px; }
+.lane-items { display: grid; gap: 9px; }
+.activity-card { min-width: 0; padding: 13px; border: 1px solid var(--border-card); border-left: 3px solid var(--lane-accent); border-radius: 12px; background: var(--bg-card); box-shadow: var(--shadow-sm); }
+.activity-card.row-overdue { border-left-color: var(--red); }
+.activity-card-title { color: var(--label-primary); font-size: 13px; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }
+.activity-card-note { margin-top: 5px; color: var(--label-secondary); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.activity-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 11px; }
+.activity-card-meta .pill { white-space: nowrap; }
+.activity-card-context { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 9px; color: var(--label-secondary); font-size: 11px; }
+.activity-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-card); color: var(--label-secondary); font-size: 11px; }
+.activity-card-actions { display: flex; gap: 4px; }
+.activity-empty { grid-column: 1 / -1; padding: 32px 16px; border: 1px dashed var(--separator-opaque); border-radius: var(--r-lg); color: var(--label-secondary); text-align: center; background: var(--bg-primary); }
+@media (max-width: 1050px) { .activity-board { grid-template-columns: repeat(2, minmax(240px, 1fr)); } }
+@media (max-width: 700px) { #view-actividades .panel-head { align-items: flex-start; flex-direction: column; } #view-actividades .filters { display: grid; grid-template-columns: 1fr 1fr; width: 100%; } #view-actividades .filters .search:first-child { grid-column: 1 / -1; width: 100%; } .activity-board { grid-template-columns: 1fr; gap: 11px; } .activity-lane { padding: 10px; } }
 </style>
 </head>
 <body>
@@ -1782,16 +1806,16 @@ code {
     <div id="view-actividades" class="spa-view" style="display:none">
     <section class="panel" id="actividades">
       <div class="panel-head">
-        <h2>Actividades</h2>
+        <div><h2>Actividades</h2><p class="activities-intro">Organizadas por estado para que cada pendiente sea fácil de encontrar.</p></div>
         <div class="filters">
-          <input id="search" class="search" placeholder="Buscar…">
-          <select id="filterStatus" class="search" style="width:auto">
+          <input id="search" class="search" type="search" aria-label="Buscar actividades" placeholder="Buscar actividad…">
+          <select id="filterStatus" class="search" aria-label="Filtrar por estado" style="width:auto">
             <option value="">Estado</option>
             <option>No iniciado</option>
             <option>En proceso</option>
             <option>Terminado</option>
           </select>
-          <select id="filterPriority" class="search" style="width:auto">
+          <select id="filterPriority" class="search" aria-label="Filtrar por prioridad" style="width:auto">
             <option value="">Prioridad</option>
             <option>Baja</option>
             <option>Media</option>
@@ -1799,14 +1823,7 @@ code {
           </select>
         </div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>Actividad</th><th>Proyecto</th><th>Prioridad</th><th>Estado</th><th>Entrega</th><th>Asignado</th><th></th>
-          </tr></thead>
-          <tbody id="activityTable"></tbody>
-        </table>
-      </div>
+      <div id="activityBoard" class="activity-board" aria-live="polite"></div>
     </section><!-- /actividades panel -->
     </div><!-- /view-actividades -->
 
@@ -2668,7 +2685,7 @@ code {
        La app usa:   'Admin', 'Supervisor', 'Técnico', 'Consulta'
     ══════════════════════════════════════════ */
     function normalizeRole(rawRole) {
-      if (!rawRole) return 'Admin'; // fallback sin perfil
+      if (!rawRole) return null;
       const r = String(rawRole).toLowerCase().trim();
       if (r === 'admin' || r === 'administrator') return 'Admin';
       if (r === 'manager' || r === 'supervisor' || r === 'gestor') return 'Supervisor';
@@ -2700,15 +2717,32 @@ code {
       // y profile == null → roleFromDB queda false → NO aplicamos restricción de Técnico.
       const roleFromDB = !profileError && profile?.role != null;
 
+      // El perfil y el rol son obligatorios. Nunca elevar permisos si faltan
+      // columnas, políticas RLS o datos de perfil.
+      if (!roleFromDB) {
+        console.error('[GestionTI] No fue posible validar el perfil:', profileError);
+        await supabaseClient.auth.signOut();
+        alert('No se pudo validar tu perfil. Contacta al administrador del sistema.');
+        window.location.replace('index.html');
+        return;
+      }
+
       currentUser = {
         id:        session.user.id,
         email:     session.user.email,
         full_name: profile?.full_name || session.user.email,
-        role:      roleFromDB ? normalizeRole(profile.role) : 'Admin',  // mapea 'admin'→'Admin', 'manager'→'Supervisor', etc.
-        roleFromDB,                                  // flag que usa loadActivities
+        role:      normalizeRole(profile.role),
+        roleFromDB,
         area:      profile?.area      || '',
-        is_active: profile?.is_active ?? true,
+        is_active: profile?.is_active,
       };
+
+      if (!currentUser.role || currentUser.is_active === false) {
+        await supabaseClient.auth.signOut();
+        alert(currentUser.is_active === false ? 'Tu cuenta está desactivada.' : 'Tu rol no es válido. Contacta al administrador.');
+        window.location.replace('index.html');
+        return;
+      }
 
       document.getElementById('welcome').textContent =
         `${currentUser.full_name} · ${currentUser.role}`;
@@ -2778,7 +2812,11 @@ code {
       }
 
       const { data, error } = await query;
-      if (error) { alert(error.message); return; }
+      if (error) {
+        console.error('[GestionTI] No se pudieron cargar las actividades:', error);
+        document.getElementById('activityBoard').innerHTML = '<div class="activity-empty" role="alert" style="color:#b91c1c">No se pudieron cargar las actividades. Verifica la conexión o contacta al administrador.</div>';
+        return;
+      }
       activities = data || [];
       renderDashboard();
       renderTable();
@@ -3090,11 +3128,11 @@ code {
     }
 
     /* ══════════════════════════════════════════
-       RENDER TABLA DE ACTIVIDADES (sin cambios)
+       TABLERO DE ACTIVIDADES AGRUPADO POR ESTADO
     ══════════════════════════════════════════ */
     function renderTable() {
       const today = new Date().toISOString().slice(0,10);
-      const q  = document.getElementById('search').value.toLowerCase();
+      const q  = document.getElementById('search').value.trim().toLowerCase();
       const fs = document.getElementById('filterStatus').value;
       const fp = document.getElementById('filterPriority').value;
       const role = currentUser?.role || 'Técnico';
@@ -3105,41 +3143,53 @@ code {
         return text.includes(q) && (!fs || a.status === fs) && (!fp || a.priority === fp);
       });
 
-      const overdueClass = (a) =>
-        a.due_date && a.due_date < today && a.status !== 'Terminado' ? 'row-overdue' : '';
+      const overdue = (a) => a.due_date && a.due_date < today && a.status !== 'Terminado';
 
       // Permisos de acción según rol
       const canEdit   = role === 'Admin' || role === 'Supervisor';
       const canDelete = role === 'Admin' || role === 'Supervisor';
       const canEditOwn = role === 'Técnico'; // técnico puede editar las suyas
 
-      document.getElementById('activityTable').innerHTML = filtered.length
-        ? filtered.map(a => {
+      const board = document.getElementById('activityBoard');
+      if (!filtered.length) {
+        board.innerHTML = '<div class="activity-empty">No encontramos actividades con estos filtros.</div>';
+        return;
+      }
+
+      const states = ['No iniciado', 'En proceso', 'Terminado'];
+      const lanes = [...states.map(status => [status, filtered.filter(a => a.status === status)]),
+        ['Otros', filtered.filter(a => !states.includes(a.status))]].filter(([, items]) => items.length);
+      board.innerHTML = lanes.map(([status, items]) => `
+        <details class="activity-lane" data-state="${esc(status)}" open>
+          <summary><span class="lane-dot" aria-hidden="true"></span><span>${esc(status)}</span><span class="lane-count">${items.length}</span></summary>
+          <div class="lane-items">${items.map(a => {
             const isOwn = a.assigned_to === currentUser?.full_name;
-            const showEdit   = canEdit || (canEditOwn && isOwn);
+            const showEdit = canEdit || (canEditOwn && isOwn);
             const showDelete = canDelete;
-            const actions = (showEdit || showDelete)
-              ? `<td class="row-actions">
-                  ${showEdit   ? `<button class="act-btn" title="Editar" onclick="openEdit(${JSON.stringify(a).split('"').join('&quot;')})">✏️</button>` : ''}
-                  ${showDelete ? `<button class="act-btn" title="Eliminar" onclick="deleteActivity('${a.id}','${esc(a.title)}')">🗑️</button>` : ''}
-                </td>`
-              : '<td></td>';
-            return `
-            <tr class="${overdueClass(a)}">
-              <td><strong>${esc(a.title)}</strong>${a.notes ? `<br><small class="note-preview">${esc(a.notes.slice(0,60))}${a.notes.length>60?'…':''}</small>` : ''}</td>
-              <td>${esc(a.projects?.name || '—')}</td>
-              <td><span class="pill ${a.priority.toLowerCase()}">${a.priority}</span></td>
-              <td><span class="pill status-${a.status.replace(/\s+/g,'-').toLowerCase()}">${a.status}</span></td>
-              <td>${a.due_date || '—'}</td>
-              <td>${esc(a.assigned_to || '—')}</td>
-              ${actions}
-            </tr>`;
-          }).join('')
-        : '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px">Sin resultados</td></tr>';
+            const due = a.due_date ? new Date(`${a.due_date}T00:00:00`).toLocaleDateString('es', { day:'numeric', month:'short', year:'numeric' }) : 'Sin fecha';
+            return `<article class="activity-card ${overdue(a) ? 'row-overdue' : ''}">
+              <div class="activity-card-title">${esc(a.title || 'Actividad sin título')}</div>
+              ${a.notes ? `<p class="activity-card-note">${esc(a.notes.slice(0,120))}${a.notes.length > 120 ? '…' : ''}</p>` : ''}
+              <div class="activity-card-meta"><span class="pill ${(a.priority || '').toLowerCase()}">${esc(a.priority || 'Sin prioridad')}</span>
+                ${overdue(a) ? '<span class="pill status-vencida">Vencida</span>' : ''}</div>
+              <div class="activity-card-context">${a.projects?.name ? `<span>▦ ${esc(a.projects.name)}</span>` : ''}${a.areas?.name ? `<span>⌁ ${esc(a.areas.name)}</span>` : ''}</div>
+              <div class="activity-card-footer"><span>◷ ${esc(due)}${a.assigned_to ? ` · ${esc(a.assigned_to)}` : ''}</span>
+                <span class="activity-card-actions">${showEdit ? `<button class="act-btn" type="button" aria-label="Editar ${esc(a.title)}" title="Editar" data-activity-action="edit" data-activity-id="${esc(a.id)}">✏️</button>` : ''}${showDelete ? `<button class="act-btn" type="button" aria-label="Eliminar ${esc(a.title)}" title="Eliminar" data-activity-action="delete" data-activity-id="${esc(a.id)}">🗑️</button>` : ''}</span></div>
+            </article>`;
+          }).join('')}</div>
+        </details>`).join('');
     }
 
     ['search','filterStatus','filterPriority'].forEach(id =>
-      document.getElementById(id).addEventListener('input', renderTable));
+      document.getElementById(id).addEventListener(id === 'search' ? 'input' : 'change', renderTable));
+    document.getElementById('activityBoard').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-activity-action]');
+      if (!button) return;
+      const activity = activities.find(item => String(item.id) === button.dataset.activityId);
+      if (!activity) return;
+      if (button.dataset.activityAction === 'edit') openEdit(activity);
+      if (button.dataset.activityAction === 'delete') deleteActivity(activity.id, activity.title || '');
+    });
 
     /* ══════════════════════════════════════════
        GUARDAR NUEVA (sin cambios)
