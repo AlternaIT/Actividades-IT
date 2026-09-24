@@ -916,37 +916,52 @@
           <p class="muted" style="margin:0;font-size:13px">Tu información de cuenta y actividad</p></div>
         </header>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <!-- ── BANNER hero ── -->
+        <div class="profile-hero" id="profileHero">
+          <div class="profile-hero-bg"></div>
+          <div class="profile-hero-content">
+            <div class="avatar-upload-wrap" onclick="document.getElementById('avatarFile').click()" style="flex-shrink:0">
+              <div class="avatar-big avatar-hero" id="profileAvatarBig" style="background:#4d6fe8">H</div>
+              <span class="avatar-edit-hint">✏️</span>
+            </div>
+            <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="handleAvatarChange(event)">
+            <div style="min-width:0;flex:1">
+              <div style="font-weight:800;font-size:20px;color:#fff;margin-bottom:3px;text-shadow:0 1px 4px #0004" id="profileAvatarName">—</div>
+              <div style="font-size:13px;color:#c7d4ff;margin-bottom:10px" id="profileAvatarEmail">—</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <span id="profileHeroBadge" class="role-badge" style="font-size:11px">—</span>
+                <span id="profileHeroArea" style="font-size:12px;color:#c7d4ff;background:#ffffff18;padding:3px 10px;border-radius:20px">—</span>
+                <span id="profileHeroStatus" style="font-size:12px;font-weight:600"></span>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button class="ghost" style="padding:5px 12px;font-size:11px;background:#ffffff18;border-color:#ffffff30;color:#fff" onclick="document.getElementById('avatarFile').click()">📷 Foto</button>
+              <button class="ghost" style="padding:5px 12px;font-size:11px;background:#ef444422;border-color:#ef444455;color:#fca5a5" onclick="removeAvatar()">Quitar</button>
+            </div>
+          </div>
+        </div>
 
-          <!-- ── COL IZQUIERDA: avatar + campos editables ── -->
+        <!-- ── GRID 3 columnas ── -->
+        <div class="profile-grid">
+
+          <!-- COL A: Editar datos -->
           <div style="display:grid;gap:16px;align-content:start">
 
-            <!-- Avatar + nombre -->
+            <!-- Datos personales -->
             <div class="panel-dash">
-              <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f0f2f7">
-                <div class="avatar-upload-wrap" onclick="document.getElementById('avatarFile').click()">
-                  <div class="avatar-big" id="profileAvatarBig" style="background:#4d6fe8">H</div>
-                  <span class="avatar-edit-hint">✏️</span>
-                </div>
-                <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="handleAvatarChange(event)">
-                <div style="min-width:0">
-                  <div style="font-weight:700;font-size:15px;color:#172033;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="profileAvatarName">—</div>
-                  <div style="font-size:12px;color:#9ca3af;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="profileAvatarEmail">—</div>
-                  <div style="display:flex;gap:6px;flex-wrap:wrap">
-                    <button class="ghost" style="padding:4px 10px;font-size:11px" onclick="document.getElementById('avatarFile').click()">Cambiar foto</button>
-                    <button class="ghost" style="padding:4px 10px;font-size:11px;color:#ef4444;border-color:#fca5a5" onclick="removeAvatar()">Quitar</button>
-                  </div>
-                </div>
-              </div>
-              <!-- Campos editables -->
-              <div class="form-grid" style="gap:12px">
-                <label>Nombre completo<input id="profileName" placeholder="Tu nombre"></label>
+              <p class="panel-title" style="margin-bottom:14px"><span>✏️</span> Datos personales</p>
+              <div class="form-grid" style="gap:12px;grid-template-columns:1fr 1fr">
+                <label style="grid-column:1/-1">Nombre completo<input id="profileName" placeholder="Tu nombre"></label>
                 <label>Área / Departamento<input id="profileArea" placeholder="Ej. Infraestructura"></label>
+                <label>Teléfono<input id="profilePhone" placeholder="Ej. +502 1234-5678"></label>
                 <label style="grid-column:1/-1">Correo electrónico
                   <input id="profileEmail" disabled style="background:#f5f7fb;color:#9ca3af" placeholder="—">
                   <span style="font-size:11px;color:#9ca3af;margin-top:4px;display:block">No editable desde aquí.</span>
                 </label>
-                <button class="primary" style="grid-column:1/-1" onclick="saveProfile()">Guardar cambios</button>
+                <label style="grid-column:1/-1">Biografía / Descripción
+                  <textarea id="profileBio" rows="3" placeholder="Cuéntanos un poco sobre ti…" style="resize:vertical;min-height:72px"></textarea>
+                </label>
+                <button class="primary" style="grid-column:1/-1" onclick="saveProfile()">💾 Guardar cambios</button>
                 <p id="profileMsg" class="muted" style="margin:0;grid-column:1/-1;font-size:13px"></p>
               </div>
             </div>
@@ -955,37 +970,42 @@
             <div class="panel-dash">
               <p class="panel-title" style="margin-bottom:12px"><span>⚡</span> Acciones rápidas</p>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                <button class="ghost" style="font-size:12px;justify-content:flex-start" onclick="closeCfgPanel();openCfgPanel('panelPassword')">🔑 Cambiar contraseña</button>
-                <button class="ghost" style="font-size:12px;justify-content:flex-start" onclick="closeCfgPanel();openCfgPanel('panelNotif')">🔔 Notificaciones</button>
-                <button class="ghost" style="font-size:12px;justify-content:flex-start" onclick="closeCfgPanel();openCfgPanel('panelTema')">🎨 Apariencia</button>
-                <button class="ghost" style="font-size:12px;color:#ef4444;border-color:#fca5a5;justify-content:flex-start" onclick="signOut()">↩ Cerrar sesión</button>
+                <button class="ghost" style="font-size:12px;justify-content:flex-start;color:#172033;border-color:#e0e4ee" onclick="closeCfgPanel();openCfgPanel('panelPassword')">🔑 Contraseña</button>
+                <button class="ghost" style="font-size:12px;justify-content:flex-start;color:#172033;border-color:#e0e4ee" onclick="closeCfgPanel();openCfgPanel('panelNotif')">🔔 Notificaciones</button>
+                <button class="ghost" style="font-size:12px;justify-content:flex-start;color:#172033;border-color:#e0e4ee" onclick="closeCfgPanel();openCfgPanel('panelTema')">🎨 Apariencia</button>
+                <button class="ghost" style="font-size:12px;justify-content:flex-start;color:#172033;border-color:#e0e4ee" onclick="closeCfgPanel();openCfgPanel('panelIdioma')">🌐 Idioma</button>
+                <button class="ghost" style="font-size:12px;color:#ef4444;border-color:#fca5a5;justify-content:flex-start;grid-column:1/-1" onclick="signOut()">↩ Cerrar sesión</button>
               </div>
             </div>
 
           </div>
 
-          <!-- ── COL DERECHA: info de cuenta + estadísticas ── -->
+          <!-- COL B: Cuenta + Estadísticas -->
           <div style="display:grid;gap:16px;align-content:start">
 
             <!-- Info de cuenta -->
             <div class="panel-dash">
               <p class="panel-title" style="margin-bottom:14px"><span>🪪</span> Información de cuenta</p>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div style="padding:12px;background:#f0f4ff;border-radius:10px">
-                  <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Rol</div>
+                <div class="profile-info-box" style="background:#f0f4ff">
+                  <div class="profile-info-label">Rol</div>
                   <div id="profileRoleBadge">—</div>
                 </div>
-                <div style="padding:12px;background:#f8fafc;border-radius:10px">
-                  <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Estado</div>
+                <div class="profile-info-box">
+                  <div class="profile-info-label">Estado</div>
                   <div id="profileStatusBadge" style="font-size:13px;font-weight:600">—</div>
                 </div>
-                <div style="padding:12px;background:#f8fafc;border-radius:10px;grid-column:1/-1">
-                  <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">ID de usuario</div>
+                <div class="profile-info-box" style="grid-column:1/-1">
+                  <div class="profile-info-label">ID de usuario</div>
                   <code id="profileUserId" style="font-size:10px;color:#344054;word-break:break-all">—</code>
                 </div>
-                <div style="padding:12px;background:#f8fafc;border-radius:10px;grid-column:1/-1">
-                  <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Sesión iniciada</div>
-                  <div id="profileSince" style="font-size:13px;color:#344054">—</div>
+                <div class="profile-info-box">
+                  <div class="profile-info-label">Sesión iniciada</div>
+                  <div id="profileSince" style="font-size:12px;color:#344054">—</div>
+                </div>
+                <div class="profile-info-box">
+                  <div class="profile-info-label">Teléfono</div>
+                  <div id="profilePhoneDisplay" style="font-size:13px;color:#344054">—</div>
                 </div>
               </div>
             </div>
@@ -994,36 +1014,133 @@
             <div class="panel-dash">
               <p class="panel-title" style="margin-bottom:14px"><span>📊</span> Mi actividad</p>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div style="padding:12px;background:#f0f4ff;border-radius:10px;text-align:center">
-                  <div style="font-size:22px;font-weight:800;color:#4d6fe8" id="myActTotal">—</div>
+                <div class="stat-mini" style="background:#f0f4ff">
+                  <div style="font-size:28px;font-weight:800;color:#4d6fe8" id="myActTotal">0</div>
                   <div style="font-size:11px;color:#687386;margin-top:2px">Asignadas</div>
                 </div>
-                <div style="padding:12px;background:#f0fdf4;border-radius:10px;text-align:center">
-                  <div style="font-size:22px;font-weight:800;color:#22c55e" id="myActDone">—</div>
+                <div class="stat-mini" style="background:#f0fdf4">
+                  <div style="font-size:28px;font-weight:800;color:#22c55e" id="myActDone">0</div>
                   <div style="font-size:11px;color:#687386;margin-top:2px">Terminadas</div>
                 </div>
-                <div style="padding:12px;background:#fff7ed;border-radius:10px;text-align:center">
-                  <div style="font-size:22px;font-weight:800;color:#f59e0b" id="myActPending">—</div>
+                <div class="stat-mini" style="background:#fff7ed">
+                  <div style="font-size:28px;font-weight:800;color:#f59e0b" id="myActPending">0</div>
                   <div style="font-size:11px;color:#687386;margin-top:2px">En progreso</div>
                 </div>
-                <div style="padding:12px;background:#fef2f2;border-radius:10px;text-align:center">
-                  <div style="font-size:22px;font-weight:800;color:#ef4444" id="myActOverdue">—</div>
+                <div class="stat-mini" style="background:#fef2f2">
+                  <div style="font-size:28px;font-weight:800;color:#ef4444" id="myActOverdue">0</div>
                   <div style="font-size:11px;color:#687386;margin-top:2px">Vencidas</div>
                 </div>
               </div>
-              <div style="margin-top:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;font-size:12px;color:#687386;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
-                <span>Completado: <strong id="myActRate" style="color:#172033">—</strong></span>
-                <span>Alta prioridad: <strong id="myActHighPrio" style="color:#ef4444">—</strong></span>
+              <!-- Barra de progreso tasa -->
+              <div style="margin-top:14px">
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+                  <span style="color:#687386">Tasa de completado</span>
+                  <strong id="myActRate" style="color:#172033">—</strong>
+                </div>
+                <div style="height:8px;background:#e8ecf5;border-radius:20px;overflow:hidden">
+                  <div id="myActRateBar" style="height:100%;background:linear-gradient(90deg,#4d6fe8,#22c55e);border-radius:20px;width:0%;transition:width .6s"></div>
+                </div>
+              </div>
+              <div style="margin-top:10px;font-size:12px;color:#687386;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px">
+                <span>Alta prioridad: <strong id="myActHighPrio" style="color:#ef4444">0</strong></span>
+                <span>Sin iniciar: <strong id="myActNotStarted" style="color:#687386">0</strong></span>
               </div>
             </div>
 
           </div>
 
+          <!-- COL C: Actividad reciente + Logros -->
+          <div style="display:grid;gap:16px;align-content:start">
+
+            <!-- Logros / badges -->
+            <div class="panel-dash">
+              <p class="panel-title" style="margin-bottom:14px"><span>🏆</span> Logros</p>
+              <div id="profileAchievements" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <!-- Se llenan dinámicamente -->
+              </div>
+            </div>
+
+            <!-- Últimas actividades -->
+            <div class="panel-dash">
+              <p class="panel-title" style="margin-bottom:12px"><span>🕐</span> Actividad reciente</p>
+              <div id="profileRecentActs" style="display:grid;gap:8px">
+                <p class="muted" style="font-size:13px;margin:0">No hay actividades recientes.</p>
+              </div>
+              <button class="btn-outline" style="width:100%;margin-top:12px;font-size:12px;justify-content:center" onclick="closeCfgPanel();showView('actividades')">Ver todas mis actividades →</button>
+            </div>
+
+          </div>
+
         </div>
+
         <style>
+          /* ── Profile hero ── */
+          .profile-hero {
+            position:relative; border-radius:16px; overflow:hidden;
+            margin-bottom:20px; min-height:130px;
+          }
+          .profile-hero-bg {
+            position:absolute;inset:0;
+            background:linear-gradient(135deg,#1f4fd7 0%,#4d6fe8 50%,#7c3aed 100%);
+          }
+          .profile-hero-content {
+            position:relative;z-index:1;
+            display:flex;align-items:center;gap:18px;
+            padding:24px 28px;flex-wrap:wrap;
+          }
+          .avatar-hero { width:72px!important;height:72px!important;font-size:26px!important;border:3px solid #fff5; }
+          /* Grid perfil 3 col */
+          .profile-grid {
+            display:grid;
+            grid-template-columns:1fr 1fr 1fr;
+            gap:16px;
+          }
+          /* Info boxes */
+          .profile-info-box {
+            padding:12px;background:#f8fafc;border-radius:10px;
+          }
+          .profile-info-label {
+            font-size:10px;font-weight:700;color:#687386;
+            text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;
+          }
+          /* Stat mini */
+          .stat-mini {
+            padding:14px 12px;border-radius:10px;text-align:center;
+          }
+          /* Achievement badge */
+          .ach-badge {
+            display:flex;flex-direction:column;align-items:center;gap:4px;
+            padding:10px 8px;border-radius:12px;background:#f8fafc;
+            border:1px solid #e6eaf0;text-align:center;
+          }
+          .ach-badge.earned { background:#f0fdf4;border-color:#bbf7d0; }
+          .ach-badge.locked { opacity:.4;filter:grayscale(1); }
+          .ach-icon { font-size:22px;line-height:1; }
+          .ach-label { font-size:10px;font-weight:700;color:#344054; }
+          /* Recent acts */
+          .recent-act-row {
+            display:flex;align-items:flex-start;gap:10px;
+            padding:8px 10px;border-radius:10px;background:#f8fafc;
+          }
+          .recent-act-dot {
+            width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;
+          }
+          /* Dark overrides */
+          [data-theme="dark"] .profile-info-box { background:#1e2535; }
+          [data-theme="dark"] .stat-mini { background:#1e2535!important; }
+          [data-theme="dark"] .ach-badge { background:#1e2535;border-color:#2d3748; }
+          [data-theme="dark"] .ach-badge.earned { background:#0f2d1b;border-color:#166534; }
+          [data-theme="dark"] .ach-label { color:#a0aec0; }
+          [data-theme="dark"] .recent-act-row { background:#1e2535; }
+          [data-theme="dark"] .profile-info-label { color:#718096; }
+          [data-theme="dark"] #myActRate { color:#e2e8f0; }
+          [data-theme="dark"] code#profileUserId { color:#7da4ff; }
+          @media(max-width:1100px){
+            .profile-grid { grid-template-columns:1fr 1fr!important; }
+          }
           @media(max-width:700px){
-            #panelPerfil > div > div:first-child + div { display:none; }
-            #panelPerfil > div { grid-template-columns:1fr !important; }
+            .profile-grid { grid-template-columns:1fr!important; }
+            .profile-hero-content { padding:18px; }
           }
         </style>
       </div>
@@ -2508,15 +2625,39 @@
       const area  = currentUser?.area      || '';
       const role  = currentUser?.role      || '—';
 
+      // Recuperar extras de localStorage
+      const extras = (() => { try { return JSON.parse(localStorage.getItem('gestionti_profile_extras') || '{}'); } catch(e){ return {}; } })();
+      const phone = extras.phone || '';
+      const bio   = extras.bio   || '';
+
       // Campos editables
       document.getElementById('profileName').value  = name;
       document.getElementById('profileArea').value  = area;
       document.getElementById('profileEmail').value = email;
+      const phoneEl = document.getElementById('profilePhone');
+      if (phoneEl) phoneEl.value = phone;
+      const bioEl = document.getElementById('profileBio');
+      if (bioEl) bioEl.value = bio;
       document.getElementById('profileMsg').textContent = '';
 
-      // Avatar header
+      // ── Hero banner ──
       document.getElementById('profileAvatarName').textContent  = name || '—';
       document.getElementById('profileAvatarEmail').textContent = email || '—';
+      const heroArea = document.getElementById('profileHeroArea');
+      if (heroArea) heroArea.textContent = area || 'Sin área asignada';
+      const heroBadge = document.getElementById('profileHeroBadge');
+      if (heroBadge) {
+        const rc = 'role-' + role.toLowerCase().replace('é','e').replace('ú','u');
+        heroBadge.className = 'role-badge ' + rc;
+        heroBadge.textContent = role;
+      }
+      const heroStatus = document.getElementById('profileHeroStatus');
+      if (heroStatus) {
+        const isActive = currentUser?.is_active !== false;
+        heroStatus.innerHTML = isActive
+          ? '<span style="color:#86efac;font-size:12px">● Activa</span>'
+          : '<span style="color:#fca5a5;font-size:12px">● Inactiva</span>';
+      }
 
       // Avatar imagen/iniciales
       const saved = localStorage.getItem('gestionti_avatar');
@@ -2548,23 +2689,78 @@
       const sinceEl = document.getElementById('profileSince');
       if (sinceEl) sinceEl.textContent = new Date().toLocaleString('es', { dateStyle:'medium', timeStyle:'short' });
 
+      const phoneDisplay = document.getElementById('profilePhoneDisplay');
+      if (phoneDisplay) phoneDisplay.textContent = phone || 'No especificado';
+
       // ── Estadísticas de actividad del usuario actual ──
       const myActs    = activities.filter(a => a.assigned_to === currentUser?.id || a.assigned_to === email);
       const done      = myActs.filter(a => a.status === 'Terminado').length;
       const inProg    = myActs.filter(a => a.status === 'En progreso').length;
+      const notStart  = myActs.filter(a => a.status === 'No iniciado' || !a.status).length;
       const now       = new Date();
       const overdue   = myActs.filter(a => a.status !== 'Terminado' && a.due_date && new Date(a.due_date) < now).length;
       const total     = myActs.length;
-      const rate      = total > 0 ? Math.round((done / total) * 100) + '%' : '—';
+      const ratePct   = total > 0 ? Math.round((done / total) * 100) : 0;
+      const rate      = total > 0 ? ratePct + '%' : '—';
       const highPrio  = myActs.filter(a => a.status !== 'Terminado' && (a.priority === 'Alta' || a.importance === 'Alta')).length;
 
       const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-      set('myActTotal',   total);
-      set('myActDone',    done);
-      set('myActPending', inProg);
-      set('myActOverdue', overdue);
-      set('myActRate',    rate);
-      set('myActHighPrio', highPrio);
+      set('myActTotal',      total);
+      set('myActDone',       done);
+      set('myActPending',    inProg);
+      set('myActOverdue',    overdue);
+      set('myActRate',       rate);
+      set('myActHighPrio',   highPrio);
+      set('myActNotStarted', notStart);
+
+      // Barra de tasa
+      const bar = document.getElementById('myActRateBar');
+      if (bar) setTimeout(() => bar.style.width = ratePct + '%', 80);
+
+      // ── Actividad reciente (últimas 5) ──
+      const recentEl = document.getElementById('profileRecentActs');
+      if (recentEl) {
+        const sorted = [...myActs].sort((a,b)=>{
+          const da = a.updated_at || a.created_at || ''; const db = b.updated_at || b.created_at || '';
+          return db.localeCompare(da);
+        }).slice(0,5);
+        if (sorted.length === 0) {
+          recentEl.innerHTML = '<p class="muted" style="font-size:13px;margin:0">No hay actividades recientes.</p>';
+        } else {
+          const statusColor = { 'Terminado':'#22c55e', 'En progreso':'#f59e0b', 'No iniciado':'#94a3b8' };
+          recentEl.innerHTML = sorted.map(a => {
+            const dot = statusColor[a.status] || '#94a3b8';
+            const title = a.title || a.name || 'Sin título';
+            const st = a.status || 'No iniciado';
+            const due = a.due_date ? new Date(a.due_date).toLocaleDateString('es',{day:'2-digit',month:'short'}) : '';
+            return `<div class="recent-act-row">
+              <div class="recent-act-dot" style="background:${dot}"></div>
+              <div style="min-width:0;flex:1">
+                <div style="font-size:13px;font-weight:600;color:#172033;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(title)}</div>
+                <div style="font-size:11px;color:#687386;margin-top:1px">${st}${due?' · Vence: '+due:''}</div>
+              </div>
+            </div>`;
+          }).join('');
+        }
+      }
+
+      // ── Logros ──
+      const achEl = document.getElementById('profileAchievements');
+      if (achEl) {
+        const achievements = [
+          { icon:'🚀', label:'Primera tarea',   earned: total >= 1 },
+          { icon:'✅', label:'5 completadas',    earned: done >= 5  },
+          { icon:'⚡', label:'10 completadas',   earned: done >= 10 },
+          { icon:'🏅', label:'Sin vencidas',     earned: total > 0 && overdue === 0 },
+          { icon:'🔥', label:'Alta prioridad',   earned: highPrio === 0 && total > 0 },
+          { icon:'🌟', label:'Maestro TI',       earned: done >= 20 },
+        ];
+        achEl.innerHTML = achievements.map(a => `
+          <div class="ach-badge ${a.earned?'earned':'locked'}">
+            <span class="ach-icon">${a.icon}</span>
+            <span class="ach-label">${a.label}</span>
+          </div>`).join('');
+      }
     }
 
     function handleAvatarChange(e) {
@@ -2593,11 +2789,17 @@
     }
 
     async function saveProfile() {
-      const msg  = document.getElementById('profileMsg');
-      const name = document.getElementById('profileName').value.trim();
-      const area = document.getElementById('profileArea').value.trim();
+      const msg   = document.getElementById('profileMsg');
+      const name  = document.getElementById('profileName').value.trim();
+      const area  = document.getElementById('profileArea').value.trim();
+      const phone = (document.getElementById('profilePhone')?.value || '').trim();
+      const bio   = (document.getElementById('profileBio')?.value   || '').trim();
       if (!name) { msg.textContent = '⚠️ El nombre no puede estar vacío.'; msg.style.color='#ef4444'; return; }
       msg.textContent = 'Guardando…'; msg.style.color = '#687386';
+
+      // Guardar extras en localStorage (phone, bio)
+      const extras = { phone, bio };
+      localStorage.setItem('gestionti_profile_extras', JSON.stringify(extras));
 
       // Intentar actualizar full_name y area; si area no existe en la BD, reintentar solo con full_name
       let { error } = await supabaseClient.from('profiles')
@@ -2605,7 +2807,6 @@
         .eq('id', currentUser.id);
 
       if (error && error.message && error.message.toLowerCase().includes('area')) {
-        // La columna area aún no existe: guardar solo el nombre
         ({ error } = await supabaseClient.from('profiles')
           .update({ full_name: name })
           .eq('id', currentUser.id));
@@ -2619,10 +2820,16 @@
 
       currentUser.full_name = name;
       currentUser.area      = area;
-      document.getElementById('welcome').textContent = `${name} · ${currentUser.role}`;
+      // Actualizar hero banner en tiempo real
       document.getElementById('profileAvatarName').textContent = name;
+      const heroArea = document.getElementById('profileHeroArea');
+      if (heroArea) heroArea.textContent = area || 'Sin área asignada';
+      const phoneDisplay = document.getElementById('profilePhoneDisplay');
+      if (phoneDisplay) phoneDisplay.textContent = phone || 'No especificado';
+      document.getElementById('welcome').textContent = `${name} · ${currentUser.role}`;
       msg.textContent = '✓ Perfil actualizado.'; msg.style.color='#166534';
       addLog('config', `Perfil actualizado: ${name}`);
+      setTimeout(() => msg.textContent = '', 3000);
     }
 
     /* ══════════════════════════════════════════
