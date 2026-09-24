@@ -32,12 +32,18 @@
       const error = document.getElementById('error');
       error.textContent = '';
       btn.disabled = true; btn.textContent = 'Entrando…';
-      const { error: authError } = await supabaseClient.auth.signInWithPassword({
-        email: document.getElementById('email').value.trim(),
-        password: document.getElementById('password').value
-      });
-      if (authError) { error.textContent = authError.message; btn.disabled = false; btn.textContent = 'Iniciar sesión'; return; }
-      location.href = 'dashboard.html';
+      try {
+        const { error: authError } = await supabaseClient.auth.signInWithPassword({
+          email: document.getElementById('email').value.trim(),
+          password: document.getElementById('password').value
+        });
+        if (authError) throw authError;
+        location.href = 'dashboard.html';
+      } catch (err) {
+        error.textContent = err?.message || 'No se pudo iniciar sesión. Verifica la conexión e inténtalo de nuevo.';
+        btn.disabled = false;
+        btn.textContent = 'Iniciar sesión';
+      }
     });
   </script>
 </body>
