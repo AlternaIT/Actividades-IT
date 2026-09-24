@@ -1241,9 +1241,10 @@ code {
 
 /* ══════════════════════════════════════════
    28. SPA VIEWS
+   JS uses el.style.display = '' / 'none' directly,
+   so the initial hidden state is set via inline style="display:none"
+   on each view element in the HTML. No CSS rule needed here.
 ══════════════════════════════════════════ */
-.spa-view { display: none; }
-.spa-view.active { display: block; }
 
 /* ══════════════════════════════════════════
    29. RESPONSIVE
