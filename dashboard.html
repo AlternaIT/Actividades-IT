@@ -916,101 +916,116 @@
           <p class="muted" style="margin:0;font-size:13px">Tu información de cuenta y actividad</p></div>
         </header>
 
-        <div style="display:grid;gap:16px;max-width:680px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
 
-          <!-- ── Tarjeta principal: avatar + datos editables ── -->
-          <div class="panel-dash">
+          <!-- ── COL IZQUIERDA: avatar + campos editables ── -->
+          <div style="display:grid;gap:16px;align-content:start">
+
             <!-- Avatar + nombre -->
-            <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #f0f2f7">
-              <div class="avatar-upload-wrap" onclick="document.getElementById('avatarFile').click()">
-                <div class="avatar-big" id="profileAvatarBig" style="background:#4d6fe8">H</div>
-                <span class="avatar-edit-hint">✏️</span>
+            <div class="panel-dash">
+              <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f0f2f7">
+                <div class="avatar-upload-wrap" onclick="document.getElementById('avatarFile').click()">
+                  <div class="avatar-big" id="profileAvatarBig" style="background:#4d6fe8">H</div>
+                  <span class="avatar-edit-hint">✏️</span>
+                </div>
+                <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="handleAvatarChange(event)">
+                <div style="min-width:0">
+                  <div style="font-weight:700;font-size:15px;color:#172033;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="profileAvatarName">—</div>
+                  <div style="font-size:12px;color:#9ca3af;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="profileAvatarEmail">—</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <button class="ghost" style="padding:4px 10px;font-size:11px" onclick="document.getElementById('avatarFile').click()">Cambiar foto</button>
+                    <button class="ghost" style="padding:4px 10px;font-size:11px;color:#ef4444;border-color:#fca5a5" onclick="removeAvatar()">Quitar</button>
+                  </div>
+                </div>
               </div>
-              <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="handleAvatarChange(event)">
-              <div style="flex:1;min-width:0">
-                <div style="font-weight:700;font-size:17px;color:#172033;margin-bottom:2px" id="profileAvatarName">—</div>
-                <div style="font-size:12px;color:#9ca3af;margin-bottom:8px" id="profileAvatarEmail">—</div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="ghost" style="padding:4px 12px;font-size:12px" onclick="document.getElementById('avatarFile').click()">Cambiar foto</button>
-                  <button class="ghost" style="padding:4px 12px;font-size:12px;color:#ef4444;border-color:#fca5a5" onclick="removeAvatar()">Quitar foto</button>
+              <!-- Campos editables -->
+              <div class="form-grid" style="gap:12px">
+                <label>Nombre completo<input id="profileName" placeholder="Tu nombre"></label>
+                <label>Área / Departamento<input id="profileArea" placeholder="Ej. Infraestructura"></label>
+                <label style="grid-column:1/-1">Correo electrónico
+                  <input id="profileEmail" disabled style="background:#f5f7fb;color:#9ca3af" placeholder="—">
+                  <span style="font-size:11px;color:#9ca3af;margin-top:4px;display:block">No editable desde aquí.</span>
+                </label>
+                <button class="primary" style="grid-column:1/-1" onclick="saveProfile()">Guardar cambios</button>
+                <p id="profileMsg" class="muted" style="margin:0;grid-column:1/-1;font-size:13px"></p>
+              </div>
+            </div>
+
+            <!-- Acciones rápidas -->
+            <div class="panel-dash">
+              <p class="panel-title" style="margin-bottom:12px"><span>⚡</span> Acciones rápidas</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <button class="ghost" style="font-size:12px;justify-content:flex-start" onclick="closeCfgPanel();openCfgPanel('panelPassword')">🔑 Cambiar contraseña</button>
+                <button class="ghost" style="font-size:12px;justify-content:flex-start" onclick="closeCfgPanel();openCfgPanel('panelNotif')">🔔 Notificaciones</button>
+                <button class="ghost" style="font-size:12px;justify-content:flex-start" onclick="closeCfgPanel();openCfgPanel('panelTema')">🎨 Apariencia</button>
+                <button class="ghost" style="font-size:12px;color:#ef4444;border-color:#fca5a5;justify-content:flex-start" onclick="signOut()">↩ Cerrar sesión</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ── COL DERECHA: info de cuenta + estadísticas ── -->
+          <div style="display:grid;gap:16px;align-content:start">
+
+            <!-- Info de cuenta -->
+            <div class="panel-dash">
+              <p class="panel-title" style="margin-bottom:14px"><span>🪪</span> Información de cuenta</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div style="padding:12px;background:#f0f4ff;border-radius:10px">
+                  <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Rol</div>
+                  <div id="profileRoleBadge">—</div>
+                </div>
+                <div style="padding:12px;background:#f8fafc;border-radius:10px">
+                  <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Estado</div>
+                  <div id="profileStatusBadge" style="font-size:13px;font-weight:600">—</div>
+                </div>
+                <div style="padding:12px;background:#f8fafc;border-radius:10px;grid-column:1/-1">
+                  <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">ID de usuario</div>
+                  <code id="profileUserId" style="font-size:10px;color:#344054;word-break:break-all">—</code>
+                </div>
+                <div style="padding:12px;background:#f8fafc;border-radius:10px;grid-column:1/-1">
+                  <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Sesión iniciada</div>
+                  <div id="profileSince" style="font-size:13px;color:#344054">—</div>
                 </div>
               </div>
             </div>
-            <!-- Campos editables -->
-            <div class="form-grid" style="gap:14px">
-              <label>Nombre completo<input id="profileName" placeholder="Tu nombre"></label>
-              <label>Área / Departamento<input id="profileArea" placeholder="Ej. Infraestructura"></label>
-              <label style="grid-column:1/-1">Correo electrónico
-                <input id="profileEmail" disabled style="background:#f5f7fb;color:#9ca3af" placeholder="—">
-                <span style="font-size:11px;color:#9ca3af;margin-top:4px;display:block">El email no se puede cambiar desde aquí. Para cambiarlo ve a Supabase Auth.</span>
-              </label>
-              <button class="primary" style="grid-column:1/-1" onclick="saveProfile()">Guardar cambios</button>
-              <p id="profileMsg" class="muted" style="margin:0;grid-column:1/-1;font-size:13px"></p>
-            </div>
-          </div>
 
-          <!-- ── Tarjeta: info de cuenta (solo lectura) ── -->
-          <div class="panel-dash">
-            <p class="panel-title" style="margin-bottom:16px"><span>🪪</span> Información de cuenta</p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
-              <div style="padding:14px;background:#f0f4ff;border-radius:10px">
-                <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Rol</div>
-                <div id="profileRoleBadge">—</div>
+            <!-- Estadísticas de actividad -->
+            <div class="panel-dash">
+              <p class="panel-title" style="margin-bottom:14px"><span>📊</span> Mi actividad</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div style="padding:12px;background:#f0f4ff;border-radius:10px;text-align:center">
+                  <div style="font-size:22px;font-weight:800;color:#4d6fe8" id="myActTotal">—</div>
+                  <div style="font-size:11px;color:#687386;margin-top:2px">Asignadas</div>
+                </div>
+                <div style="padding:12px;background:#f0fdf4;border-radius:10px;text-align:center">
+                  <div style="font-size:22px;font-weight:800;color:#22c55e" id="myActDone">—</div>
+                  <div style="font-size:11px;color:#687386;margin-top:2px">Terminadas</div>
+                </div>
+                <div style="padding:12px;background:#fff7ed;border-radius:10px;text-align:center">
+                  <div style="font-size:22px;font-weight:800;color:#f59e0b" id="myActPending">—</div>
+                  <div style="font-size:11px;color:#687386;margin-top:2px">En progreso</div>
+                </div>
+                <div style="padding:12px;background:#fef2f2;border-radius:10px;text-align:center">
+                  <div style="font-size:22px;font-weight:800;color:#ef4444" id="myActOverdue">—</div>
+                  <div style="font-size:11px;color:#687386;margin-top:2px">Vencidas</div>
+                </div>
               </div>
-              <div style="padding:14px;background:#f8fafc;border-radius:10px">
-                <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Estado de cuenta</div>
-                <div id="profileStatusBadge" style="font-size:13px;font-weight:600">—</div>
-              </div>
-              <div style="padding:14px;background:#f8fafc;border-radius:10px">
-                <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">ID de usuario</div>
-                <code id="profileUserId" style="font-size:10px;color:#344054;word-break:break-all">—</code>
-              </div>
-              <div style="padding:14px;background:#f8fafc;border-radius:10px">
-                <div style="font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Sesión actual iniciada</div>
-                <div id="profileSince" style="font-size:13px;color:#344054">—</div>
+              <div style="margin-top:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;font-size:12px;color:#687386;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+                <span>Completado: <strong id="myActRate" style="color:#172033">—</strong></span>
+                <span>Alta prioridad: <strong id="myActHighPrio" style="color:#ef4444">—</strong></span>
               </div>
             </div>
-          </div>
 
-          <!-- ── Tarjeta: estadísticas de actividad ── -->
-          <div class="panel-dash">
-            <p class="panel-title" style="margin-bottom:16px"><span>📊</span> Mi actividad</p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">
-              <div style="padding:14px;background:#f0f4ff;border-radius:10px;text-align:center">
-                <div style="font-size:24px;font-weight:800;color:#4d6fe8" id="myActTotal">—</div>
-                <div style="font-size:11px;color:#687386;margin-top:3px">Actividades asignadas</div>
-              </div>
-              <div style="padding:14px;background:#f0fdf4;border-radius:10px;text-align:center">
-                <div style="font-size:24px;font-weight:800;color:#22c55e" id="myActDone">—</div>
-                <div style="font-size:11px;color:#687386;margin-top:3px">Terminadas</div>
-              </div>
-              <div style="padding:14px;background:#fff7ed;border-radius:10px;text-align:center">
-                <div style="font-size:24px;font-weight:800;color:#f59e0b" id="myActPending">—</div>
-                <div style="font-size:11px;color:#687386;margin-top:3px">En progreso</div>
-              </div>
-              <div style="padding:14px;background:#fef2f2;border-radius:10px;text-align:center">
-                <div style="font-size:24px;font-weight:800;color:#ef4444" id="myActOverdue">—</div>
-                <div style="font-size:11px;color:#687386;margin-top:3px">Vencidas</div>
-              </div>
-            </div>
-            <div style="margin-top:12px;padding:12px 14px;background:#f8fafc;border-radius:10px;font-size:12px;color:#687386;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
-              <span>Tasa de completado: <strong id="myActRate" style="color:#172033">—</strong></span>
-              <span>Alta prioridad pendiente: <strong id="myActHighPrio" style="color:#ef4444">—</strong></span>
-            </div>
-          </div>
-
-          <!-- ── Accesos rápidos ── -->
-          <div class="panel-dash">
-            <p class="panel-title" style="margin-bottom:14px"><span>⚡</span> Acciones rápidas</p>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <button class="ghost" style="font-size:13px" onclick="closeCfgPanel();openCfgPanel('panelPassword')">🔑 Cambiar contraseña</button>
-              <button class="ghost" style="font-size:13px" onclick="closeCfgPanel();openCfgPanel('panelNotif')">🔔 Notificaciones</button>
-              <button class="ghost" style="font-size:13px" onclick="closeCfgPanel();openCfgPanel('panelTema')">🎨 Apariencia</button>
-              <button class="ghost" style="font-size:13px;color:#ef4444;border-color:#fca5a5" onclick="signOut()">↩ Cerrar sesión</button>
-            </div>
           </div>
 
         </div>
+        <style>
+          @media(max-width:700px){
+            #panelPerfil > div > div:first-child + div { display:none; }
+            #panelPerfil > div { grid-template-columns:1fr !important; }
+          }
+        </style>
       </div>
 
       <!-- ════ PANEL: Cambiar contraseña ════ -->
