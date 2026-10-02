@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alterna — Verificar código</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .card{background:#fff;padding:2.5rem 2rem;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.08);width:100%;max-width:380px}
+    .logo{font-size:1.5rem;font-weight:700;color:#6366f1;margin-bottom:.25rem}
+    h1{font-size:1.15rem;color:#1a1a2e;margin-bottom:.25rem}
+    p{font-size:.85rem;color:#6b7280;margin-bottom:.75rem}
+    .email-badge{display:inline-block;background:#e0e7ff;color:#3730a3;padding:.2rem .6rem;border-radius:20px;font-size:.8rem;font-weight:600;margin-bottom:1.5rem}
+    label{display:block;font-size:.8rem;font-weight:600;color:#374151;margin-bottom:.35rem}
+    input{width:100%;padding:.65rem .85rem;border:1px solid #d1d5db;border-radius:8px;font-size:1.4rem;letter-spacing:.3em;text-align:center;margin-bottom:1rem;outline:none;transition:border-color .2s}
+    input:focus{border-color:#6366f1}
+    button{width:100%;padding:.7rem;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer;transition:background .2s;margin-bottom:.75rem}
+    button:hover{background:#4f46e5}
+    button:disabled{background:#a5b4fc;cursor:not-allowed}
+    .btn-link{background:none;border:1px solid #d1d5db;border-radius:8px;color:#6b7280;font-size:.85rem;cursor:pointer;width:100%;padding:.5rem}
+    .btn-link:hover{background:#f9fafb}
+    .msg{display:none;padding:.6rem .85rem;border-radius:8px;font-size:.82rem;margin-bottom:1rem}
+    .msg.error{background:#fee2e2;color:#b91c1c}
+    .msg.visible{display:block}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Alterna</div>
+  <h1>Verifica tu identidad</h1>
+  <p>Te enviamos un código de 6 dígitos a:</p>
+  <div class="email-badge" id="emailBadge"></div>
+  <div class="msg" id="msg"></div>
+  <label for="pin">Código</label>
+  <input type="text" id="pin" placeholder="000000" maxlength="6" inputmode="numeric"/>
+  <button id="btnVerificar">Verificar</button>
+  <button class="btn-link" id="btnVolver">← Volver / usar otro correo</button>
+</div>
+<script>
+  const supabase = window.supabase.createClient(
+    'https://lbxdzsfnuvylrdcrlhjz.supabase.co',
+    'sb_publishable_aEEtnleb_NbPYaEgjwENmw_7cWxZHqk',
+    { auth: { persistSession: true } }
+  );
+
+  const email = sessionStorage.getItem('otp_email');
+  if (!email) window.location.href = 'index.html';
+  document.getElementById('emailBadge').textContent = email;
+
+  document.getElementById('pin').addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+  });
+
+  document.getElementById('btnVerificar').addEventListener('click', async () => {
+    const token = document.getElementById('pin').value.trim();
+    const msg   = document.getElementById('msg');
+    const btn   = document.getElementById('btnVerificar');
+    msg.className = 'msg';
+
+    if (token.length !== 6) {
+      msg.textContent = 'El código debe tener 6 dígitos.';
+      msg.classList.add('error','visible');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
+
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+
+    btn.disabled = false;
+    btn.textContent = 'Verificar';
+
+    if (error) {
+      msg.textContent = 'Código incorrecto o expirado. Solicita uno nuevo.';
+      msg.classList.add('error','visible');
+      return;
+    }
+
+    sessionStorage.removeItem('otp_email');
+    window.location.href = 'panel.html';
+  });
+
+  document.getElementById('btnVolver').addEventListener('click', () => {
+    sessionStorage.removeItem('otp_email');
+    window.location.href = 'index.html';
+  });
+</script>
+</body>
+</html>
