@@ -4551,8 +4551,8 @@ window.signOut = async function() {
        INIT
     ══════════════════════════════════════════ */
     async function init() {
-      const session = await requireAuth();
-      if (!session) return;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { showView('login'); return; }
 
       // Pedimos solo las columnas que siempre existen en el schema original.
       // Las columnas opcionales (email, area, is_active, last_seen) se agregan
