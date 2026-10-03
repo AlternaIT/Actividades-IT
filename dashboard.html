@@ -4465,8 +4465,14 @@ function showView(name) {
   document.getElementById('view-login').style.display = name === 'login' ? '' : 'none';
   document.getElementById('view-dashboard').style.display = name === 'dashboard' ? '' : 'none';
   if (name === 'dashboard') {
+    document.dispatchEvent(new Event('spa-ready'));
   }
 }
+
+window.signOut = async function() {
+  await window.supabaseClient.auth.signOut();
+  showView('login');
+};
 
 // On load: check session
 (async () => {
@@ -6206,4 +6212,3 @@ function showView(name) {
   </script>
 </body>
 </html>
-  
