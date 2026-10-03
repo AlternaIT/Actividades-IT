@@ -4481,7 +4481,7 @@ window.signOut = async function() {
   const { data: { session } } = await supabase.auth.getSession();
   showView(session ? 'dashboard' : 'login');
   if (session) {
-    // fire DOMContentLoaded equivalent for dashboard init
+    init();
   }
 })();
 </script>
@@ -5506,8 +5506,6 @@ window.signOut = async function() {
 
     // Mostrar dashboard por defecto al cargar
     showView('dashboard');
-
-    init();
 
     /* ══════════════════════════════════════════
        CONFIGURACIÓN — PERMISOS Y ROLES
